@@ -1865,7 +1865,10 @@ void loop()
             }
 
             //Update frequency
-            currentFrequency += tabStepFM[FMStepIdx] * encoderCount;//si4735.getFrequency();
+            if (currentMode == FM)
+                currentFrequency += tabStepFM[FMStepIdx] * encoderCount; //si4735.getFrequency() is too slow
+            else
+                currentFrequency += tabStep[idxStep] * encoderCount;
             uint16_t bMin = band[bandIdx].minimumFreq, bMax = band[bandIdx].maximumFreq;
             if (band[bandIdx].bandType = SW_BAND_TYPE)
             {
@@ -1950,7 +1953,12 @@ void loop()
     }
     if (BUTTONEVENT_SHORTPRESS == btn_Encoder.checkEvent(encoderEvent))
     {
-        if (cmdStep)
+        if (cmdBand)
+        {
+            cmdBand = false;
+            showModulation();
+        }
+        else if (cmdStep)
         {
             cmdStep = false;
             showStep(); 
