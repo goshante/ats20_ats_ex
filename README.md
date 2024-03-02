@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.0 (02.03.2024)
+**Latest version:** v1.01 (02.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.0/ATS_EX_v1.0.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.01/ATS_EX_v1.01.hex)
 
 
 <p align="center">
@@ -29,6 +29,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **The tuning across frequencies has become as smooth as possible** in SSB mode, thanks to the merging of the receive frequency with the BFO. The rough frequency switching now occurs every 16 KHz (**the seamless tuning in both directions covers a full 32 Hz**). In Non-SSB modes now you also can tune faster, **encoder should be more responsive**.
  - **A lot of steps are available for every mode**. In AM you have 1/5/9/10/50/100k/1M steps, in SSB you have 1/5/9/10k steps and 10/25/50/100Hz steps for more precise tuning. In FM mode you have 10k/100k/1M steps.
  - Added settings page. You can configure **Gain Control and ATT**, **Soft Mute**, **Automatic Volume Control** (AVC), On or Off **AVC for SSB mode**,  **DeEmphasis** for FM mode and enable or disable **SSB Sync** mode.
+ - Adjustable **screen brightness**.
  - Added **Mute button** and **Display on/off button**.
  - Added **Battery charge status** (Requires physical mod: Solder **VCC pin** through voltage divider to **A2** pin)
  - ~~Added **S-Meter**~~ in development
@@ -44,18 +45,18 @@ Or you can build it yourself. I use Visual Studio 2022 with VSMicro extension th
 **ATTENTION:** After flashing it's strongly **recommended to reset EEPROM memory**. To do this just hold the **Encoder Button** while turning receiver on.
 ### Buttons
 
- 1. **BAND+** : Short press to enter **Band selection mode**. Select band with **Encoder Rotation** and confirm with **encoder button** or press **BAND+** again.
- 2. **VOL+** : Short press to enter **Volume regulation mode**. Set volume with **Encoder Rotation** and confirm with **Encoder Button** or press **VOL+** again.
+ 1. **BAND+** : Short press to enter **Band selection mode**. Select band with **Encoder Rotation** and confirm with **encoder button** or press **BAND+** again. In **settings mode** this button is switching between **settings pages**.
+ 2. **VOL+** : Short press to enter **Volume regulation mode**. Set volume with **Encoder Rotation** and confirm with **Encoder Button** or press **VOL+** again. Long press increasing volume very fast.
  3. **STEP** : Short press to enter **Step regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **STEP** again.
  4. **AGC** : Short press to **toggle display on and off**. Long press to toggle **Sync** mode while **SSB** is active.
  5. **BAND-** : Short press to open or close **Settings screen**.
- 6. **VOL-** : Short press to **toggle volume mute on and off**.
+ 6. **VOL-** : Short press to **toggle volume mute on and off**. Long press decreasing volume very fast.
  7. **BW** : Short press to enter **Bandwidth regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **BW** again.
  8. **MODE** : Short press to **switch between modulations**. On **FM** band **WFM** is the only available modulation and **MODE** button is disabled. On all other bands next modulations are available: **AM/USB/LSB/CW**. In all modulations *(except AM and WFM (FM))* you have improved frequency tuning without interrupting every step.
  9. **Encoder Rotation** : Frequency **Tune** or settings **navigation**.
  10. **Encoder Button** :  Short press to **scan** for stations or **confirm** your selection. Resets **EEPROM** memory when held on startup.
 ### Settings
-Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder Button**, change value with **Encoder Rotation** and save it with **Encoder Button**. Close settings with **BAND-** button.
+Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder Button**, change value with **Encoder Rotation** and save it with **Encoder Button**. Close settings with **BAND-** button. Navigate between **settings pages** with **BAND+** button.
 
 <p align="center">
     <img src="img/ats20_settings.png" alt="Icon" />
@@ -72,6 +73,8 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 **DeE** :  Only for **FM** mode. It's **DeEmphasis** value in microseconds. It can be only **50** or **75**.
 
 **Syn** : Enable or disable **Sync mode for SSB**.
+
+**Scr** : **Display brightness** value. This is number from **5** to **125**.
 
 ### Display elements description
 

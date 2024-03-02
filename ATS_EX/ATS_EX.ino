@@ -138,6 +138,7 @@ SettingsItem Settings[] =
     { "Syn", 0,  SettingType::Switch    },  //SSB Sync
     { "DeE", 1,  SettingType::Switch    },  //FM DeEmphasis (0 - 50, 1 - 75)
     { "AVC", 46, SettingType::Num       },  //Automatic Volume Control
+    { "Scr", 80, SettingType::Num       },  //Screen Brightness
 };
 
 enum SettingsIndex
@@ -148,9 +149,12 @@ enum SettingsIndex
     Sync,
     DeEmp,
     AutoVolControl,
+    Brightness,
     SETTINGS_MAX
 };
+const uint8_t SettingsMaxPages = 2;
 uint8_t SettingSelected = 0;
+uint8_t SettingsPage = 1;
 bool SettingEditing = false;
 
 int8_t bwIdxSSB = 4;
@@ -270,36 +274,37 @@ struct Band
     uint16_t currentFreq;
     uint16_t currentStepIdx;
     int8_t bandwidthIdx;     // Bandwidth table index (internal table in Si473x controller)
-    char tag[3];
+    char* tag;
 };
 
 // Band settings
 #define SW_LIMIT_LOW    1700
 #define SW_LIMIT_HIGH   30000
 
+char _literal_SW[3] = "SW"; //To reduce binary image size
 Band band[] =
 {
     {LW_BAND_TYPE, 149, 520, 300, 0, 4, "LW"},
     {MW_BAND_TYPE, 520, 1710, 1476, 3, 4, "MW"},
-    {SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4, "SW"},     // 160 Meter
-    {SW_BAND_TYPE, 3500, 4500, 3700, 0, 5, "SW"},     // 80 Meter
-    {SW_BAND_TYPE, 4500, 5600, 4850, 1, 4, "SW"},
-    {SW_BAND_TYPE, 5600, 6800, 6000, 1, 4, "SW"},
-    {SW_BAND_TYPE, 6800, 7300, 7100, 0, 4, "SW"},     // 40 Meter
-    {SW_BAND_TYPE, 7200, 8500, 7200, 1, 4, "SW"},     // 41 Meter
-    {SW_BAND_TYPE, 8500, 10000, 9604, 1, 4, "SW"},
-    {SW_BAND_TYPE, 10000, 11200, 10100, 0, 4, "SW"},  // 30 Meter
-    {SW_BAND_TYPE, 11200, 12500, 11940, 1, 4, "SW"},
-    {SW_BAND_TYPE, 13400, 13900, 13600, 1, 4, "SW"},
-    {SW_BAND_TYPE, 14000, 14500, 14200, 0, 4, "SW"},  // 20 Meter
-    {SW_BAND_TYPE, 15000, 15900, 15300, 1, 4, "SW"},
-    {SW_BAND_TYPE, 17200, 17900, 17600, 1, 4, "SW"},
-    {SW_BAND_TYPE, 18000, 18300, 18100, 0, 4, "SW"},  // 17 Meter
-    {SW_BAND_TYPE, 21000, 21400, 21200, 0, 4, "SW"},  // 15 Meter
-    {SW_BAND_TYPE, 21400, 21900, 21500, 1, 4, "SW"},  // 13 Meter
-    {SW_BAND_TYPE, 24890, 26200, 24940, 0, 4, "SW"},  // 12 Meter
+    {SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4, _literal_SW},     // 160 Meter
+    {SW_BAND_TYPE, 3500, 4500, 3700, 0, 5, _literal_SW},     // 80 Meter
+    {SW_BAND_TYPE, 4500, 5600, 4850, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 5600, 6800, 6000, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 6800, 7300, 7100, 0, 4, _literal_SW},     // 40 Meter
+    {SW_BAND_TYPE, 7200, 8500, 7200, 1, 4, _literal_SW},     // 41 Meter
+    {SW_BAND_TYPE, 8500, 10000, 9604, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 10000, 11200, 10100, 0, 4, _literal_SW},  // 30 Meter
+    {SW_BAND_TYPE, 11200, 12500, 11940, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 13400, 13900, 13600, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 14000, 14500, 14200, 0, 4, _literal_SW},  // 20 Meter
+    {SW_BAND_TYPE, 15000, 15900, 15300, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 17200, 17900, 17600, 1, 4, _literal_SW},
+    {SW_BAND_TYPE, 18000, 18300, 18100, 0, 4, _literal_SW},  // 17 Meter
+    {SW_BAND_TYPE, 21000, 21400, 21200, 0, 4, _literal_SW},  // 15 Meter
+    {SW_BAND_TYPE, 21400, 21900, 21500, 1, 4, _literal_SW},  // 13 Meter
+    {SW_BAND_TYPE, 24890, 26200, 24940, 0, 4, _literal_SW},  // 12 Meter
     {SW_BAND_TYPE, 26200, 28000, 27500, 0, 4, "CB"},  // CB Band (11 Meter)
-    {SW_BAND_TYPE, 28000, SW_LIMIT_HIGH, 28400, 0, 4, "SW"},  // 10 Meter
+    {SW_BAND_TYPE, 28000, SW_LIMIT_HIGH, 28400, 0, 4, _literal_SW},  // 10 Meter
     {FM_BAND_TYPE, 6400, 10800, 7000, 1, 0, "  "},
     {FM_BAND_TYPE, 8400, 10800, 10570, 1, 0, "  "},
 };
@@ -410,7 +415,7 @@ void setup()
         oled.print("ATS-20 RECEIVER ");
         oled.invertOutput(false);
         oled.setCursor(0, 2);
-        oled.print("  ATS_EX v1.00");
+        oled.print("  ATS_EX v1.01");
         oled.setCursor(0, 4);
         oled.print(" Goshante 2024\0");
         oled.setCursor(0, 6);
@@ -768,6 +773,8 @@ void readAllReceiverInformation()
     for (int i = 0; i < SettingsIndex::SETTINGS_MAX; i++)
         Settings[i].param = EEPROM.read(addr_offset++);
 
+    oled.setContrast(uint8_t(Settings[SettingsIndex::Brightness].param) * 2);
+
     previousFrequency = currentFrequency = band[bandIdx].currentFreq;
     if (band[bandIdx].bandType == FM_BAND_TYPE)
         FMStepIdx = band[bandIdx].currentStepIdx;
@@ -1044,8 +1051,9 @@ void DrawSetting(uint8_t idx, bool full)
         return;
 
     char buf[5] = { 0, 0, 0, 0, 0 };
-    uint8_t yOffset = idx > 2 ? (idx - 3) * 2 : idx * 2;
-    uint8_t xOffset = idx > 2 ? 60 : 0;
+    uint8_t place = idx - ((SettingsPage - 1) * 6);
+    uint8_t yOffset = place > 2 ? (place - 3) * 2 : place * 2;
+    uint8_t xOffset = place > 2 ? 60 : 0;
     if (full)
         oledPrint(Settings[idx].name, 5 + xOffset, 2 + yOffset, DEFAULT_FONT, idx == SettingSelected && !SettingEditing);
     SettingParamToUI(buf, idx);
@@ -1055,8 +1063,31 @@ void DrawSetting(uint8_t idx, bool full)
 //Update and draw settings UI
 void showSettings()
 {
-    for (uint8_t i = 0; i < SettingsIndex::SETTINGS_MAX; i++)
-        DrawSetting(i, true);
+    for (uint8_t i = 0; i < 6 && i + ((SettingsPage - 1) * 6) < SettingsIndex::SETTINGS_MAX; i++)
+        DrawSetting(i + ((SettingsPage - 1) * 6), true);
+}
+
+void showSettingsTitle()
+{
+    oledPrint("   SETTINGS  ", 0, 0, DEFAULT_FONT, true);
+    oled.invertOutput(true);
+    oled.print(uint16_t(SettingsPage));
+    oled.print("/");
+    oled.print(uint16_t(SettingsMaxPages));
+    oled.invertOutput(false);
+}
+
+void switchSettingsPage()
+{
+    SettingsPage++;
+    if (SettingsPage > SettingsMaxPages)
+        SettingsPage = 1;
+
+    SettingSelected = 6 * (SettingsPage - 1);
+    SettingEditing = false;
+    oled.clear();
+    showSettingsTitle();
+    showSettings();
 }
 
 //Switch between main screen and settings mode
@@ -1066,7 +1097,8 @@ void switchSettings()
     {
         settingsActive = true;
         oled.clear();
-        oledPrint("    SETTINGS    ", 0, 0, DEFAULT_FONT, true);
+        SettingsPage = 1;
+        showSettingsTitle();
         SettingSelected = 0;
         SettingEditing = false;
         showSettings();
@@ -1135,6 +1167,7 @@ void showVolume()
 {
     if (settingsActive)
         return;
+
     char buf[3];
     if (muteVolume == 0)
         convertToChar(buf, si4735.getCurrentVolume(), 2, 0, 0);
@@ -1519,6 +1552,21 @@ void doSoftMute(int8_t v)
     DrawSetting(SettingsIndex::SoftMute, false);
 }
 
+//Settings: Brigh
+void doBrightness(int8_t v)
+{
+    Settings[SettingsIndex::Brightness].param = (v == 1) ? Settings[SettingsIndex::Brightness].param + 1 : Settings[SettingsIndex::Brightness].param - 1;
+    if (Settings[SettingsIndex::Brightness].param > 125)
+        Settings[SettingsIndex::Brightness].param = 5;
+    else if (Settings[SettingsIndex::Brightness].param < 5)
+        Settings[SettingsIndex::Brightness].param = 125;
+
+    oled.setContrast(uint8_t(Settings[SettingsIndex::Brightness].param) * 2);
+
+    delay(MIN_ELAPSED_TIME);
+    DrawSetting(SettingsIndex::Brightness, false);
+}
+
 //Settings: SSB Soft Mute
 //void doSSBSoftMute(int8_t v)
 //{
@@ -1751,10 +1799,15 @@ void loop()
                 else
                     next--;
 
-                if (next < 0)
-                    SettingSelected = SettingsIndex::SETTINGS_MAX - 1;
-                else if (next >= SettingsIndex::SETTINGS_MAX)
-                    SettingSelected = 0;
+                uint8_t pageIdx = SettingsPage - 1;
+                uint8_t maxOnThisPage = (pageIdx * 6) + 5;
+                if (maxOnThisPage >= SettingsIndex::SETTINGS_MAX)
+                    maxOnThisPage = SettingsIndex::SETTINGS_MAX - 1;
+
+                if (next < pageIdx * 6)
+                    SettingSelected = maxOnThisPage;
+                else if (next > maxOnThisPage)
+                    SettingSelected = pageIdx * 6;
                 else
                     SettingSelected = next;
 
@@ -1787,6 +1840,10 @@ void loop()
 
                 case SettingsIndex::Sync:
                     doSync();
+                    break;
+
+                case SettingsIndex::Brightness:
+                    doBrightness(encoderCount);
                     break;
                 }
             }
@@ -1870,7 +1927,7 @@ void loop()
             else
                 currentFrequency += tabStep[idxStep] * encoderCount;
             uint16_t bMin = band[bandIdx].minimumFreq, bMax = band[bandIdx].maximumFreq;
-            if (band[bandIdx].bandType = SW_BAND_TYPE)
+            if (band[bandIdx].bandType == SW_BAND_TYPE)
             {
                 bMin = SW_LIMIT_LOW;
                 bMax = SW_LIMIT_HIGH;
@@ -1912,6 +1969,10 @@ void loop()
         {
             cmdBand = !cmdBand;
             disableCommand(&cmdBand, cmdBand, showModulation);
+        }
+        else
+        {
+            switchSettingsPage();
         }
     }
     if (BUTTONEVENT_SHORTPRESS == btn_BandDn.checkEvent(bandEvent))
@@ -1990,9 +2051,9 @@ void loop()
             delay(30);
             if (currentMode == FM)
             {
-                float f = round(si4735.getFrequency() / 10.0);
+                uint16_t f = si4735.getFrequency() / 10;
                 //Interval from 10 to 100 KHz
-                currentFrequency = (uint16_t)f * 10;
+                currentFrequency = f * 10;
                 si4735.setFrequency(currentFrequency);
             }
             else
