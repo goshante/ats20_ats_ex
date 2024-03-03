@@ -20,6 +20,9 @@
 #define RST_PIN -1
 #define RESET_PIN 12
 
+//Battery charge monitoring analog pin (Voltage divider 10-10 KOhm directly from battery)
+#define BATTERY_VOLTAGE_PIN A2
+
 // Encoder
 #define ENCODER_PIN_A 2
 #define ENCODER_PIN_B 3

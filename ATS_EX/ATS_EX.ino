@@ -87,6 +87,7 @@ void setup()
 
     pinMode(ENCODER_PIN_A, INPUT_PULLUP);
     pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+    g_voltagePinConnnected = analogRead(BATTERY_VOLTAGE_PIN) > 300;
 
     oled.begin(128, 64, sizeof(tiny4koled_init_128x64br), tiny4koled_init_128x64br);
     oled.clear();
@@ -116,7 +117,7 @@ void setup()
         oled.print("ATS-20 RECEIVER ");
         oled.invertOutput(false);
         oled.setCursor(0, 2);
-        oled.print("  ATS_EX v1.02");
+        oled.print("  ATS_EX v1.03");
         oled.setCursor(0, 4);
         oled.print(" Goshante 2024\0");
         oled.setCursor(0, 6);
@@ -471,6 +472,7 @@ void showStatus(bool basicUpdate = false, bool cleanFreq = false)
     showModulation();
     showStep();
     showBandwidth();
+    showCharge(true);
     if (!basicUpdate)
     {
         showVolume();
@@ -689,9 +691,51 @@ void showVolume()
 }
 
 //Draw battery charge
-void showCharge()
+//This feature requires hardware mod
+//Voltage divider made of two 10 KOhm resistors between + and GND of Li-Ion battery
+//Solder it to A2 analog pin
+void showCharge(bool forceShow)
 {
-    //TODO: Analog charge monitor
+    if (!g_voltagePinConnnected)
+        return;
+
+    //This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
+    //Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
+    const uint16_t chargeFull = 651;    //2.1v
+    const uint16_t chargeLow = 558;     //1.8v
+    static uint32_t lastChargeShow = 0;
+    static uint16_t averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+
+    if ((millis() - lastChargeShow) > 10000 || lastChargeShow == 0 || forceShow)
+    {
+        char buf[4];
+        int16_t percents = (((averageVoltageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
+        bool isUsbCable = false;
+        if (percents > 120)
+        {
+            buf[0] = 'U'; buf[1] = 'S'; buf[2] = 'B'; buf[3] = 0x0;
+            isUsbCable = true;
+        }
+        else if (percents > 100)
+            percents = 100;
+        else if (percents < 0)
+            percents = 0;
+
+        if (!isUsbCable)
+            convertToChar(buf, percents, 3);
+
+        if (!g_settingsActive && !g_sMeterOn)
+            oledPrint(buf, 102, 6, DEFAULT_FONT);
+        lastChargeShow = millis();
+        averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+    }
+    else
+    {
+        if (averageVoltageSamples > 0)
+            averageVoltageSamples = (averageVoltageSamples + analogRead(BATTERY_VOLTAGE_PIN)) / 2;
+        else
+            averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+    }  
 }
 
 //Draw steps (with units)
@@ -754,8 +798,8 @@ void showSMeter()
     uint8_t rssi = g_si4735.getCurrentRSSI();
     rssi = rssi > 64 ? 64 : rssi;
 
-    int sMeterValue = rssi / (64 / 13);
-    char buf[14];
+    int sMeterValue = rssi / (64 / 16);
+    char buf[17];
     for (int i = 0; i < sizeof(buf) - 1; i++)
     {
         if (i < sMeterValue)
@@ -1388,6 +1432,8 @@ void loop()
     if (g_sMeterOn && !g_settingsActive)
         showSMeter();
 
+    showCharge(false);
+
     //Encoder rotation check
     if (g_encoderCount != 0)
     {
@@ -1544,6 +1590,7 @@ void loop()
                 oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
                 showModulation();
                 showStep();
+                showCharge(true);
             }
             g_cmdBand = !g_cmdBand;
             disableCommand(&g_cmdBand, g_cmdBand, showModulation);
@@ -1679,6 +1726,7 @@ void loop()
                 oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
                 showModulation();
                 showStep();
+                showCharge(true);
             }
         }
     }
@@ -1694,6 +1742,7 @@ void loop()
                 oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
                 showModulation();
                 showStep();
+                showCharge(true);
             }
         }
     }

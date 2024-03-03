@@ -4,6 +4,7 @@ const uint8_t g_app_id = 45;
 const int g_eeprom_address = 0;
 long g_storeTime = millis();
 
+bool g_voltagePinConnnected = false;
 bool g_ssbLoaded = false;
 bool g_fmStereo = true;
 
