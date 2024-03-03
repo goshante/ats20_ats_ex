@@ -87,6 +87,7 @@ void setup()
 
     pinMode(ENCODER_PIN_A, INPUT_PULLUP);
     pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+    g_voltagePinConnnected = analogRead(BATTERY_VOLTAGE_PIN) > 300;
 
     oled.begin(128, 64, sizeof(tiny4koled_init_128x64br), tiny4koled_init_128x64br);
     oled.clear();
@@ -116,7 +117,7 @@ void setup()
         oled.print("ATS-20 RECEIVER ");
         oled.invertOutput(false);
         oled.setCursor(0, 2);
-        oled.print("  ATS_EX v1.02");
+        oled.print("  ATS_EX v1.03");
         oled.setCursor(0, 4);
         oled.print(" Goshante 2024\0");
         oled.setCursor(0, 6);
@@ -252,12 +253,12 @@ uint8_t bandEvent(uint8_t event, uint8_t pin)
                 if (BAND_BUTTON == pin)
                 {
                     if (g_bandIndex < g_lastBand)
-                        bandUp();
+                        bandSwitch(true);
                 }
                 else
                 {
                     if (g_bandIndex)
-                        bandDown();
+                        bandSwitch(false);
                 }
             }
             count = count % BAND_DELAY;
@@ -471,12 +472,20 @@ void showStatus(bool basicUpdate = false, bool cleanFreq = false)
     showModulation();
     showStep();
     showBandwidth();
+    showCharge(true);
     if (!basicUpdate)
     {
         showVolume();
     }
 }
 
+void updateLowerDisplayLine()
+{
+    oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
+    showModulation();
+    showStep();
+    showCharge(true);
+}
 
 //Converts settings value to UI value
 void SettingParamToUI(char* buf, uint8_t idx)
@@ -689,9 +698,51 @@ void showVolume()
 }
 
 //Draw battery charge
-void showCharge()
+//This feature requires hardware mod
+//Voltage divider made of two 10 KOhm resistors between + and GND of Li-Ion battery
+//Solder it to A2 analog pin
+void showCharge(bool forceShow)
 {
-    //TODO: Analog charge monitor
+    if (!g_voltagePinConnnected)
+        return;
+
+    //This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
+    //Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
+    const uint16_t chargeFull = 651;    //2.1v
+    const uint16_t chargeLow = 558;     //1.8v
+    static uint32_t lastChargeShow = 0;
+    static uint16_t averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+
+    if ((millis() - lastChargeShow) > 10000 || lastChargeShow == 0 || forceShow)
+    {
+        char buf[4];
+        int16_t percents = (((averageVoltageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
+        bool isUsbCable = false;
+        if (percents > 120)
+        {
+            buf[0] = 'U'; buf[1] = 'S'; buf[2] = 'B'; buf[3] = 0x0;
+            isUsbCable = true;
+        }
+        else if (percents > 100)
+            percents = 100;
+        else if (percents < 0)
+            percents = 0;
+
+        if (!isUsbCable)
+            convertToChar(buf, percents, 3);
+
+        if (!g_settingsActive && !g_sMeterOn)
+            oledPrint(buf, 102, 6, DEFAULT_FONT);
+        lastChargeShow = millis();
+        averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+    }
+    else
+    {
+        if (averageVoltageSamples > 0)
+            averageVoltageSamples = (averageVoltageSamples + analogRead(BATTERY_VOLTAGE_PIN)) / 2;
+        else
+            averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+    }  
 }
 
 //Draw steps (with units)
@@ -754,8 +805,8 @@ void showSMeter()
     uint8_t rssi = g_si4735.getCurrentRSSI();
     rssi = rssi > 64 ? 64 : rssi;
 
-    int sMeterValue = rssi / (64 / 13);
-    char buf[14];
+    int sMeterValue = rssi / (64 / 16);
+    char buf[17];
     for (int i = 0; i < sizeof(buf) - 1; i++)
     {
         if (i < sMeterValue)
@@ -843,7 +894,7 @@ void checkRDS()
 #endif
 
 
-void bandUp()
+void bandSwitch(bool up)
 {
     g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
 
@@ -852,43 +903,19 @@ void bandUp()
     else
         g_bandList[g_bandIndex].currentStepIdx = g_stepIndex;
 
-    if (g_bandIndex < g_lastBand)
+    if (up)
     {
-        g_bandIndex++;
+        if (g_bandIndex < g_lastBand)
+            g_bandIndex++;
+        else
+            g_bandIndex = 0;
     }
     else
     {
-        g_bandIndex = 0;
-    }
-
-    if (g_sMeterOn)
-    {
-        g_sMeterOn = false;
-        oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
-    }
-
-    g_currentBFO = 0;
-    if (isSSB())
-        g_si4735.setSSBBfo(0);
-    applyBandConfiguration();
-}
-
-void bandDown()
-{
-    g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
-
-    if (g_currentMode == FM)
-        g_bandList[g_bandIndex].currentStepIdx = g_FMStepIndex;
-    else
-        g_bandList[g_bandIndex].currentStepIdx = g_stepIndex;
-
-    if (g_bandIndex > 0)
-    {
-        g_bandIndex--;
-    }
-    else
-    {
-        g_bandIndex = g_lastBand;
+        if (g_bandIndex > 0)
+            g_bandIndex--;
+        else
+            g_bandIndex = g_lastBand;
     }
 
     if (g_sMeterOn)
@@ -992,6 +1019,14 @@ void applyBandConfiguration(bool extraSSBReset = false)
         else
         {
             g_currentMode = AM;
+
+            //Clamp LW limit after SSB
+            if (g_bandList[0].minimumFreq < LW_LIMIT_LOW_SSB || g_currentFrequency < g_bandList[0].minimumFreq)
+            {
+                g_bandList[g_bandIndex].currentFreq = g_bandList[0].minimumFreq;
+                g_currentFrequency = g_bandList[0].minimumFreq;
+            }
+
             g_si4735.setAM(minFreq,
                 maxFreq,
                 g_bandList[g_bandIndex].currentFreq,
@@ -1094,7 +1129,7 @@ void doVolume(int8_t v)
     showVolume();
 }
 
-//g_Settings: Attenuation
+//Settings: Attenuation
 void doAttenuation(int8_t v)
 {
     g_Settings[SettingsIndex::ATT].param = ((v == 1) ? g_Settings[SettingsIndex::ATT].param + 1 : g_Settings[SettingsIndex::ATT].param - 1);
@@ -1113,7 +1148,7 @@ void doAttenuation(int8_t v)
     DrawSetting(SettingsIndex::ATT, false);
 }
 
-//g_Settings: Soft Mute
+//Settings: Soft Mute
 void doSoftMute(int8_t v)
 {
     g_Settings[SettingsIndex::SoftMute].param = (v == 1) ? g_Settings[SettingsIndex::SoftMute].param + 1 : g_Settings[SettingsIndex::SoftMute].param - 1;
@@ -1129,7 +1164,7 @@ void doSoftMute(int8_t v)
     DrawSetting(SettingsIndex::SoftMute, false);
 }
 
-//g_Settings: Brigh
+//Settings: Brigh
 void doBrightness(int8_t v)
 {
     g_Settings[SettingsIndex::Brightness].param = (v == 1) ? g_Settings[SettingsIndex::Brightness].param + 1 : g_Settings[SettingsIndex::Brightness].param - 1;
@@ -1144,7 +1179,7 @@ void doBrightness(int8_t v)
     DrawSetting(SettingsIndex::Brightness, false);
 }
 
-//g_Settings: SSB Soft Mute
+//Settings: SSB Soft Mute
 //void doSSBSoftMute(int8_t v)
 //{
 //    g_Settings[SettingsIndex::SMMaxAtt].param = (v == 1) ? g_Settings[SettingsIndex::SMMaxAtt].param + 1 : g_Settings[SettingsIndex::SMMaxAtt].param - 1;
@@ -1160,7 +1195,7 @@ void doBrightness(int8_t v)
 //    DrawSetting(SettingsIndex::SMMaxAtt, false);
 //}
 
-//g_Settings: SSB AVC Switch
+//Settings: SSB AVC Switch
 void doSSBAVC(int8_t v = 0)
 {
     if (g_Settings[SettingsIndex::SVC].param == 0)
@@ -1179,7 +1214,7 @@ void doSSBAVC(int8_t v = 0)
     delay(MIN_ELAPSED_TIME);
 }
 
-//g_Settings: Automatic Volume Control
+//Settings: Automatic Volume Control
 void doAvc(int8_t v)
 {
     g_Settings[SettingsIndex::AutoVolControl].param = (v == 1) ? g_Settings[SettingsIndex::AutoVolControl].param + 2 : g_Settings[SettingsIndex::AutoVolControl].param - 2;
@@ -1194,7 +1229,7 @@ void doAvc(int8_t v)
     DrawSetting(SettingsIndex::AutoVolControl, false);
 }
 
-//g_Settings: Sync switch
+//Settings: Sync switch
 void doSync(int8_t v = 0)
 {
     if (g_Settings[SettingsIndex::Sync].param == 0)
@@ -1214,7 +1249,7 @@ void doSync(int8_t v = 0)
     delay(MIN_ELAPSED_TIME);
 }
 
-//g_Settings: FM DeEmp switch (50 or 75)
+//Settings: FM DeEmp switch (50 or 75)
 void doDeEmp(int8_t v = 0)
 {
     if (g_Settings[SettingsIndex::DeEmp].param == 0)
@@ -1229,7 +1264,7 @@ void doDeEmp(int8_t v = 0)
     DrawSetting(SettingsIndex::DeEmp, false);
 }
 
-//g_Settings: SW Units
+//Settings: SW Units
 void doSWUnits(int8_t v = 0)
 {
     if (g_Settings[SettingsIndex::SWUnits].param == 0)
@@ -1240,7 +1275,7 @@ void doSWUnits(int8_t v = 0)
     DrawSetting(SettingsIndex::SWUnits, false);
 }
 
-//g_Settings: SW Units
+//Settings: SW Units
 void doSSBSoftMuteMode(int8_t v = 0)
 {
     if (g_Settings[SettingsIndex::SSM].param == 0)
@@ -1329,6 +1364,25 @@ void disableCommand(bool* b, bool value, void (*showFunction)())
 bool clampSSBBand()
 {
     int freq = g_currentFrequency + (g_currentBFO / 1000);
+    auto bfoReset = [&]()
+    {
+        g_currentBFO = 0;
+        g_si4735.setSSBBfo(0);
+        showFrequency(true);
+        showModulation();
+    };
+
+    //Special SSB limit for LW
+    if (freq <= LW_LIMIT_LOW_SSB)
+    {
+        g_currentFrequency = g_bandList[0].minimumFreq;
+        g_bandList[0].currentFreq = g_bandList[0].minimumFreq;
+        g_si4735.setFrequency(g_bandList[g_bandIndex].minimumFreq);
+        bfoReset();
+        return false;
+    }
+    else if (freq < g_bandList[0].minimumFreq)
+        return false;
 
     if (freq > g_bandList[g_bandIndex].maximumFreq)
     {
@@ -1338,10 +1392,7 @@ bool clampSSBBand()
             g_currentFrequency = g_bandList[g_bandIndex].minimumFreq;
             g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
             g_si4735.setFrequency(g_bandList[g_bandIndex].minimumFreq);
-            g_currentBFO = 0;
-            g_si4735.setSSBBfo(0);
-            showFrequency(true);
-            showModulation();
+            bfoReset();
             return true;
         }
         else
@@ -1358,10 +1409,7 @@ bool clampSSBBand()
             g_currentFrequency = g_bandList[g_bandIndex].maximumFreq;
             g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
             g_si4735.setFrequency(g_bandList[g_bandIndex].maximumFreq);
-            g_currentBFO = 0;
-            g_si4735.setSSBBfo(0);
-            showFrequency(true);
-            showModulation();
+            bfoReset();
             return true;
         }
         else
@@ -1387,6 +1435,8 @@ void loop()
 
     if (g_sMeterOn && !g_settingsActive)
         showSMeter();
+
+    showCharge(false);
 
     //Encoder rotation check
     if (g_encoderCount != 0)
@@ -1436,9 +1486,9 @@ void loop()
         else if (g_cmdBand)
         {
             if (g_encoderCount == 1)
-                bandUp();
+                bandSwitch(true);
             else
-                bandDown();
+                bandSwitch(false);
         }
         else if (isSSB())
         {
@@ -1474,6 +1524,7 @@ void loop()
             {
                 g_si4735.setFrequency(g_currentFrequency);
                 g_currentFrequency = g_si4735.getFrequency();
+                g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
             }
 
             g_previousFrequency = 0; //Force EEPROM update
@@ -1541,9 +1592,7 @@ void loop()
             if (g_sMeterOn)
             {
                 g_sMeterOn = false;
-                oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
-                showModulation();
-                showStep();
+                updateLowerDisplayLine();
             }
             g_cmdBand = !g_cmdBand;
             disableCommand(&g_cmdBand, g_cmdBand, showModulation);
@@ -1617,6 +1666,19 @@ void loop()
             g_SettingEditing = !g_SettingEditing;
             DrawSetting(g_SettingSelected, true);
         }
+        else if (isSSB())
+        {
+            if (!g_settingsActive)
+            {
+                g_cmdStep = !g_cmdStep;
+                disableCommand(&g_cmdStep, g_cmdStep, showStep);
+                if (g_sMeterOn)
+                {
+                    g_sMeterOn = false;
+                    updateLowerDisplayLine();
+                }
+            }
+        }
         //Seek in SSB/CW is not allowed
         else if (g_currentMode == FM || g_currentMode == AM)
         {
@@ -1649,7 +1711,7 @@ void loop()
     uint8_t agcEvent = btn_AGC.checkEvent(agcEvent);
     if (BUTTONEVENT_SHORTPRESS == agcEvent)
     {
-        if (!g_settingsActive)
+        if (!g_settingsActive || g_settingsActive && !g_displayOn)
         {
             g_displayOn = !g_displayOn;
             if (g_displayOn)
@@ -1676,9 +1738,7 @@ void loop()
             if (g_sMeterOn)
             {
                 g_sMeterOn = false;
-                oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
-                showModulation();
-                showStep();
+                updateLowerDisplayLine();
             }
         }
     }
@@ -1691,9 +1751,7 @@ void loop()
                 showSMeter();
             else
             {
-                oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
-                showModulation();
-                showStep();
+                updateLowerDisplayLine();
             }
         }
     }

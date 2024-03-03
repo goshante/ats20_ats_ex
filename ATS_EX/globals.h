@@ -4,6 +4,7 @@ const uint8_t g_app_id = 45;
 const int g_eeprom_address = 0;
 long g_storeTime = millis();
 
+bool g_voltagePinConnnected = false;
 bool g_ssbLoaded = false;
 bool g_fmStereo = true;
 
@@ -180,7 +181,7 @@ const char _literal_EmptyLine[14] = "             ";
 
 Band g_bandList[] =
 {
-    {LW_BAND_TYPE, 149, 520, 300, 0, 4, "LW"},
+    {LW_BAND_TYPE, 153, 520, 300, 0, 4, "LW"},
     {MW_BAND_TYPE, 520, 1710, 1476, 3, 4, "MW"},
     {SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4, _literal_SW},     // 160 Meter
     {SW_BAND_TYPE, 3500, 4500, 3700, 0, 5, _literal_SW},     // 80 Meter

@@ -20,6 +20,9 @@
 #define RST_PIN -1
 #define RESET_PIN 12
 
+//Battery charge monitoring analog pin (Voltage divider 10-10 KOhm directly from battery)
+#define BATTERY_VOLTAGE_PIN A2
+
 // Encoder
 #define ENCODER_PIN_A 2
 #define ENCODER_PIN_B 3
@@ -49,5 +52,6 @@
 #define CW  4
 
 // Band settings
-#define SW_LIMIT_LOW    1700
-#define SW_LIMIT_HIGH   30000
+#define SW_LIMIT_LOW		1700
+#define SW_LIMIT_HIGH		30000
+#define LW_LIMIT_LOW_SSB	(g_bandList[0].minimumFreq - 16)

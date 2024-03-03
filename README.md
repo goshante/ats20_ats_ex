@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.02 (03.03.2024)
+**Latest version:** v1.03 (03.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.02/ATS_EX_v1.02.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.03/ATS_EX_v1.03.hex)
 
 
 <p align="center">
@@ -31,7 +31,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - Added settings page. You can configure **Gain Control and ATT**, **Soft Mute**, **Automatic Volume Control** (AVC), On or Off **AVC for SSB mode**,  **DeEmphasis** for FM mode and enable or disable **SSB Sync** mode.
  - Adjustable **screen brightness**.
  - Added **Mute button** and **Display on/off button**.
- - Added **Battery charge status** (Requires physical mod: Solder **VCC pin** through voltage divider to **A2** pin)
+ - Added **Battery charge status** (Requires simple physical mod: Make **voltage divider** from two 10 KOhm resistors and solder it's middle output to **A2** pin)
  - Added **S-Meter**
  - **Atm328p controller is now running on it's full clock**. Controls have to be more responsive. (Don't know how it impacts on battery drain.)
  - Code refactoring, optimizations
@@ -54,7 +54,7 @@ Or you can build it yourself. I use Visual Studio 2022 with VSMicro extension th
  7. **BW** : Short press to enter **Bandwidth regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **BW** again. Long press to show/hide **S-Meter**.
  8. **MODE** : Short press to **switch between modulations**. On **FM** band **WFM** is the only available modulation and **MODE** button is disabled. On all other bands next modulations are available: **AM/USB/LSB/CW**. In all modulations *(except AM and WFM (FM))* you have improved frequency tuning without interrupting every step.
  9. **Encoder Rotation** : Frequency **Tune** or settings **navigation**.
- 10. **Encoder Button** :  Short press to **scan** for stations or **confirm** your selection. Resets **EEPROM** memory when held on startup.
+ 10. **Encoder Button** :  In **non-SSB mode** - Short press to **scan** for stations or **confirm** your selection. Resets **EEPROM** memory when held on startup. In **SSB** mode it works as **STEP** short press button.
 ### Settings
 Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder Button**, change value with **Encoder Rotation** and save it with **Encoder Button**. Close settings with **BAND-** button. Navigate between **settings pages** with **BAND+** button.
 
@@ -97,3 +97,9 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 **6**.  **Frequency units**. Units are always displayed, except when decimal part of frequency in **SSB** is **5 digits long**.
 
 **7**.  **Volume**. This is sound volume of receiver. Could be value between **0** and **63**. When mute is enabled it displays letter **M** instead of volume.
+
+**8**.  **Battery charge level** in percents. Requires **voltage divider** soldered to **A2** pin. Not displayed if not connected.
+
+# How to make the battery charge level display?
+
+You will need a soldering iron and two resistors of **10kΩ** each. Solder one resistor to the negative (ground) and the other directly to the positive of the lithium battery. Then solder their meeting point together; this will be their midpoint. You need to solder it to pin **A2** on the controller. Thus, half of the battery voltage will be applied to it. By making such a simple modification, the **ATX_EX** firmware will automatically detect the connected battery voltage pin and start displaying the charge.
