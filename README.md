@@ -6,9 +6,8 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.01 (02.03.2024)
-
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.01/ATS_EX_v1.01.hex)
+**Latest version:** v1.02 (03.03.2024)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.02/ATS_EX_v1.02.hex)
 
 
 <p align="center">
@@ -32,7 +31,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - Adjustable **screen brightness**.
  - Added **Mute button** and **Display on/off button**.
  - Added **Battery charge status** (Requires physical mod: Solder **VCC pin** through voltage divider to **A2** pin)
- - ~~Added **S-Meter**~~ in development
+ - Added **S-Meter**
  - **Atm328p controller is now running on it's full clock**. Controls have to be more responsive. (Don't know how it impacts on battery drain.)
  - Code refactoring, optimizations
  - Fixed some bugs
@@ -45,13 +44,13 @@ Or you can build it yourself. I use Visual Studio 2022 with VSMicro extension th
 **ATTENTION:** After flashing it's strongly **recommended to reset EEPROM memory**. To do this just hold the **Encoder Button** while turning receiver on.
 ### Buttons
 
- 1. **BAND+** : Short press to enter **Band selection mode**. Select band with **Encoder Rotation** and confirm with **encoder button** or press **BAND+** again. In **settings mode** this button is switching between **settings pages**.
+ 1. **BAND+** : Short press to enter **Band selection mode**. Select band with **Encoder Rotation** and confirm with **encoder button** or press **BAND+** again. In **settings mode** this button is switching between **settings pages**. Hold to **scroll quickly** through bands forward.
  2. **VOL+** : Short press to enter **Volume regulation mode**. Set volume with **Encoder Rotation** and confirm with **Encoder Button** or press **VOL+** again. Long press increasing volume very fast.
  3. **STEP** : Short press to enter **Step regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **STEP** again.
  4. **AGC** : Short press to **toggle display on and off**. Long press to toggle **Sync** mode while **SSB** is active.
- 5. **BAND-** : Short press to open or close **Settings screen**.
+ 5. **BAND-** : Short press to open or close **Settings screen**. Hold to **scroll quickly** through bands backwards.
  6. **VOL-** : Short press to **toggle volume mute on and off**. Long press decreasing volume very fast.
- 7. **BW** : Short press to enter **Bandwidth regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **BW** again.
+ 7. **BW** : Short press to enter **Bandwidth regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **BW** again. Long press to show/hide **S-Meter**.
  8. **MODE** : Short press to **switch between modulations**. On **FM** band **WFM** is the only available modulation and **MODE** button is disabled. On all other bands next modulations are available: **AM/USB/LSB/CW**. In all modulations *(except AM and WFM (FM))* you have improved frequency tuning without interrupting every step.
  9. **Encoder Rotation** : Frequency **Tune** or settings **navigation**.
  10. **Encoder Button** :  Short press to **scan** for stations or **confirm** your selection. Resets **EEPROM** memory when held on startup.
@@ -74,7 +73,9 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 
 **Syn** : Enable or disable **Sync mode for SSB**.
 
-**Scr** : **Display brightness** value. This is number from **5** to **125**.
+**SW** : **Frequency units** for AM mode in SW band. It can be only **KHz** or **MHz**. In MHz mode it used dot as delimiter.
+
+**SSM** : **SSB Soft Mute Mode**. It can be only **RSS** (SM based on RSSI) or **SNR** (SM based on SNR).
 
 ### Display elements description
 

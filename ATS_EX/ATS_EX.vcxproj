@@ -91,10 +91,13 @@
     <ProjectCapability Include="VisualMicro" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="defs.h" />
     <ClInclude Include="font14x24sevenSeg.h" />
+    <ClInclude Include="globals.h" />
     <ClInclude Include="patch_ssb_compressed.h" />
     <ClInclude Include="Rotary.h" />
     <ClInclude Include="SimpleButton.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="__vm\.ATS_EX.vsarduino.h" />
   </ItemGroup>
   <PropertyGroup>
