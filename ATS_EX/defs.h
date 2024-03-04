@@ -2,9 +2,6 @@
 
 //Removed, but can be easy implemented. Required Si4735 chip, RDS is not supported in 32-34 chips
 #define USE_RDS       0 
-//On 1: Atm328p is running on full clock speed. 
-//On 0: Atm328p is running on half clock speed. 
-#define FASTER_CPU    1 
 
 //EEPROM Settings
 #define STORE_TIME 10000 // Inactive time to save our settings

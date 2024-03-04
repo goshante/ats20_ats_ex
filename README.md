@@ -78,6 +78,10 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 
 **SSM** : **SSB Soft Mute Mode**. It can be only **RSS** (SM based on RSSI) or **SNR** (SM based on SNR).
 
+**COF** : **SSB Cutoff Filter**. It has 3 modes: **On** - Band pass filter to cutoff both the unwanted side band and high frequency components. **Off** - Low pass filter to cutoff the unwanted side band. And **AUT** mode: Automatically turns on and off, depending on **Bandwidth** (Off when bandwidth is higher than **2.0 KHz**).
+
+**CPU** : **CPU Frequency**. This is useful for **battery saving** purposes. It can be only **100** or **50%**. 100% - CPU works on x1 of own frequency, using it's full potential. 50% - CPU works on half of it's own frequency, it's slower, but allowing you to save more battery.
+
 ### Display elements description
 
 <p align="center">

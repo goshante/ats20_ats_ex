@@ -65,16 +65,6 @@ int getLastStep()
 //Initialize controller
 void setup()
 {
-    //Clock speed configuration
-    noInterrupts(); //cli()
-    CLKPR = 0x80;   //Allow edit CLKPR register
-#if FASTER_CPU
-    CLKPR = 0;      //Full CPU clock speed
-#else
-    CLKPR = 1;      //Half CPU clock speed
-#endif
-    interrupts();   //sei()
-
     pinMode(13, OUTPUT);
 #ifdef DEBUG
     Serial.begin(115200);
@@ -117,7 +107,7 @@ void setup()
         oled.print("ATS-20 RECEIVER ");
         oled.invertOutput(false);
         oled.setCursor(0, 2);
-        oled.print("  ATS_EX v1.03");
+        oled.print("  ATS_EX v1.04");
         oled.setCursor(0, 4);
         oled.print(" Goshante 2024\0");
         oled.setCursor(0, 6);
@@ -137,10 +127,15 @@ void setup()
 
     //Load settings from EEPROM
     if (EEPROM.read(g_eeprom_address) == g_app_id)
-    {
-        //Serial.write("read EEPROM\n");
         readAllReceiverInformation();
-    }
+    else
+        saveAllReceiverInformation();
+
+    //Clock speed configuration
+    noInterrupts(); //cli()
+    CLKPR = 0x80;   //Allow edit CLKPR register
+    CLKPR = g_Settings[SettingsIndex::CPUSpeed].param;
+    interrupts();   //sei()
 
     //Initialize current band settings and read frequency
     applyBandConfiguration();
@@ -278,14 +273,25 @@ void rotaryEncoder()
     if (encoderStatus)
     {
         if (encoderStatus == DIR_CW)
-        {
             g_encoderCount = 1;
-        }
         else
-        {
             g_encoderCount = -1;
-        }
     }
+}
+
+//Saves more flash image size
+void updateSSBCutoffFilter()
+{
+    // Auto mode: If SSB bandwidth 2 KHz or lower - it's better to enable cutoff filter
+    if (g_Settings[SettingsIndex::CutoffFilter].param == 0)
+    {
+        if (g_bandwidthSSB[g_bwIndexSSB].idx == 0 || g_bandwidthSSB[g_bwIndexSSB].idx == 4 || g_bandwidthSSB[g_bwIndexSSB].idx == 5)
+            g_si4735.setSSBSidebandCutoffFilter(0);
+        else
+            g_si4735.setSSBSidebandCutoffFilter(1);
+    }
+    else
+        g_si4735.setSSBSidebandCutoffFilter(g_Settings[SettingsIndex::CutoffFilter].param - 1);
 }
 
 //EEPROM Save
@@ -357,11 +363,7 @@ void readAllReceiverInformation()
         loadSSBPatch();
         g_bwIndexSSB = (bwIdx > 5) ? 5 : bwIdx;
         g_si4735.setSSBAudioBandwidth(g_bandwidthSSB[g_bwIndexSSB].idx);
-        // If SSB bandwidth 2 KHz or lower - it's better to enable cutoff filter
-        if (g_bandwidthSSB[g_bwIndexSSB].idx == 0 || g_bandwidthSSB[g_bwIndexSSB].idx == 4 || g_bandwidthSSB[g_bwIndexSSB].idx == 5)
-            g_si4735.setSSBSidebandCutoffFilter(0);
-        else
-            g_si4735.setSSBSidebandCutoffFilter(1);
+        updateSSBCutoffFilter();
     }
     else if (g_currentMode == AM)
     {
@@ -392,7 +394,7 @@ void showFrequency(bool cleanDisplay = false)
     if (g_settingsActive)
         return;
 
-    char* unit;
+    char* unit = "KHz";
     char freqDisplay[7] = { 0, 0, 0, 0, 0, 0, 0 };
     char ssbSuffix[4] = { '.', '0', '0', 0 };
     static int prevLen = 0;
@@ -412,14 +414,11 @@ void showFrequency(bool cleanDisplay = false)
             convertToChar(freqDisplay, g_currentFrequency, 5, (g_bandList[g_bandIndex].bandType == SW_BAND_TYPE && swMhz) ? 2 : 0, '.', '/');
             if (g_bandList[g_bandIndex].bandType == SW_BAND_TYPE && swMhz)
                 unit = (char*)"MHz";
-            else
-                unit = (char*)"KHz";
         }
         else
         {
             splitFreq(khzBFO, tailBFO);
             utoa(freqDisplay, khzBFO);
-            unit = (char*)"KHz";
         }
     }
 
@@ -509,6 +508,26 @@ void SettingParamToUI(char* buf, uint8_t idx)
         convertToChar(buf, g_Settings[idx].param, 3);
         break;
 
+    case SettingType::SwitchAuto:
+        if (g_Settings[idx].param == 0)
+        {
+            buf[0] = 'A';
+            buf[1] = 'U';
+            buf[2] = 'T';       }
+        else if (g_Settings[idx].param == 1)
+        {
+            buf[0] = 'O';
+            buf[1] = 'n';
+            buf[2] = ' ';
+        }
+        else
+        {
+            buf[0] = 'O';
+            buf[1] = 'f';
+            buf[2] = 'f';
+        }
+        buf[3] = 0x0;
+        break;
     case SettingType::Switch:
         if (idx == SettingsIndex::DeEmp)
         {
@@ -517,32 +536,22 @@ void SettingParamToUI(char* buf, uint8_t idx)
                 buf[0] = '5';
                 buf[1] = '0';
                 buf[2] = 'u';
-                buf[3] = 0x0;
             }
             else
             {
                 buf[0] = '7';
                 buf[1] = '5';
                 buf[2] = 'u';
-                buf[3] = 0x0;
             }
         }
         else if (idx == SettingsIndex::SWUnits)
         {
             if (g_Settings[idx].param == 0)
-            {
                 buf[0] = 'K';
-                buf[1] = 'H';
-                buf[2] = 'z';
-                buf[3] = 0x0;
-            }
             else
-            {
                 buf[0] = 'M';
-                buf[1] = 'H';
-                buf[2] = 'z';
-                buf[3] = 0x0;
-            }
+            buf[1] = 'H';
+            buf[2] = 'z';
         }
         else if (idx == SettingsIndex::SSM)
         {
@@ -551,14 +560,27 @@ void SettingParamToUI(char* buf, uint8_t idx)
                 buf[0] = 'R';
                 buf[1] = 'S';
                 buf[2] = 'S';
-                buf[3] = 0x0;
             }
             else
             {
                 buf[0] = 'S';
                 buf[1] = 'N';
                 buf[2] = 'R';
-                buf[3] = 0x0;
+            }
+        }
+        else if (idx == SettingsIndex::CPUSpeed)
+        {
+            if (g_Settings[idx].param == 0)
+            {
+                buf[0] = '1';
+                buf[1] = '0';
+                buf[2] = '0';
+            }
+            else
+            {
+                buf[0] = '5';
+                buf[1] = '0';
+                buf[2] = '%';
             }
         }
         else
@@ -568,16 +590,15 @@ void SettingParamToUI(char* buf, uint8_t idx)
                 buf[0] = 'O';
                 buf[1] = 'f';
                 buf[2] = 'f';
-                buf[3] = 0x0;
             }
             else
             {
                 buf[0] = 'O';
                 buf[1] = 'n';
                 buf[2] = ' ';
-                buf[3] = 0x0;
             }
         }
+        buf[3] = 0x0;
         break;
 
     default:
@@ -591,7 +612,7 @@ void DrawSetting(uint8_t idx, bool full)
     if (!g_settingsActive)
         return;
 
-    char buf[5] = { 0, 0, 0, 0, 0 };
+    char buf[5];
     uint8_t place = idx - ((g_SettingsPage - 1) * 6);
     uint8_t yOffset = place > 2 ? (place - 3) * 2 : place * 2;
     uint8_t xOffset = place > 2 ? 60 : 0;
@@ -937,13 +958,11 @@ void loadSSBPatch()
 {
     // This works, but i am not sure it's safe
     //g_si4735.setI2CFastModeCustom(700000);
-    const uint16_t SSBPatch_size = sizeof(ssb_patch_content);
-    const uint16_t cmd0x15_size = sizeof(cmd_0x15);
     g_si4735.setI2CFastModeCustom(500000);
     g_si4735.queryLibraryId(); //Do we really need this? Research it.
     g_si4735.patchPowerUp();
     delay(50);
-    g_si4735.downloadCompressedPatch(ssb_patch_content, SSBPatch_size, cmd_0x15, cmd0x15_size);
+    g_si4735.downloadCompressedPatch(ssb_patch_content, sizeof(ssb_patch_content), cmd_0x15, sizeof(cmd_0x15));
     g_si4735.setSSBConfig(g_bandwidthSSB[g_bwIndexSSB].idx, 1, 0, 1, 0, 1);
     g_si4735.setI2CStandardMode();
     g_ssbLoaded = true;
@@ -999,14 +1018,7 @@ void applyBandConfiguration(bool extraSSBReset = false)
                 g_bandList[g_bandIndex].currentFreq,
                 g_bandList[g_bandIndex].currentStepIdx >= g_amTotalSteps ? 0 : g_tabStep[g_bandList[g_bandIndex].currentStepIdx],
                 g_currentMode == CW ? LSB : g_currentMode);
-
-            // If SSB bandwidth 2 KHz or lower - it's better to enable cutoff filter
-            if (g_currentMode == CW || 
-                g_bandwidthSSB[g_bwIndexSSB].idx == 0 || g_bandwidthSSB[g_bwIndexSSB].idx == 4 || g_bandwidthSSB[g_bwIndexSSB].idx == 5)
-                g_si4735.setSSBSidebandCutoffFilter(0);
-            else
-                g_si4735.setSSBSidebandCutoffFilter(1);
-
+            updateSSBCutoffFilter();
             g_si4735.setSSBAutomaticVolumeControl(g_Settings[SettingsIndex::SVC].param);
             g_si4735.setSSBDspAfc(g_Settings[SettingsIndex::Sync].param == 1 ? 0 : 1);
             g_si4735.setSSBAvcDivider(g_Settings[SettingsIndex::Sync].param == 0 ? 0 : 3); //Set Sync mode
@@ -1129,14 +1141,20 @@ void doVolume(int8_t v)
     showVolume();
 }
 
+//Helps to save more flash image size
+void doSwitchLogic(int8_t& param, int8_t v, int8_t low, int8_t high, int8_t step)
+{
+    param = ((v == 1) ? param + step : param - step);
+    if (param < low)
+        param = high;
+    else if (param > high)
+        param = low;
+}
+
 //Settings: Attenuation
 void doAttenuation(int8_t v)
 {
-    g_Settings[SettingsIndex::ATT].param = ((v == 1) ? g_Settings[SettingsIndex::ATT].param + 1 : g_Settings[SettingsIndex::ATT].param - 1);
-    if (g_Settings[SettingsIndex::ATT].param < 0)
-        g_Settings[SettingsIndex::ATT].param = 37;
-    else if (g_Settings[SettingsIndex::ATT].param > 37)
-        g_Settings[SettingsIndex::ATT].param = 0;
+    doSwitchLogic(g_Settings[SettingsIndex::ATT].param, v, 0, 37, 1);
 
     uint8_t att = g_Settings[SettingsIndex::ATT].param;
     uint8_t disableAgc = att > 0;
@@ -1151,11 +1169,7 @@ void doAttenuation(int8_t v)
 //Settings: Soft Mute
 void doSoftMute(int8_t v)
 {
-    g_Settings[SettingsIndex::SoftMute].param = (v == 1) ? g_Settings[SettingsIndex::SoftMute].param + 1 : g_Settings[SettingsIndex::SoftMute].param - 1;
-    if (g_Settings[SettingsIndex::SoftMute].param > 32)
-        g_Settings[SettingsIndex::SoftMute].param = 0;
-    else if (g_Settings[SettingsIndex::SoftMute].param < 0)
-        g_Settings[SettingsIndex::SoftMute].param = 32;
+    doSwitchLogic(g_Settings[SettingsIndex::SoftMute].param, v, 0, 32, 1);
 
     if (g_currentMode != FM)
         g_si4735.setAmSoftMuteMaxAttenuation(g_Settings[SettingsIndex::SoftMute].param);
@@ -1164,15 +1178,10 @@ void doSoftMute(int8_t v)
     DrawSetting(SettingsIndex::SoftMute, false);
 }
 
-//Settings: Brigh
+//Settings: Brightness
 void doBrightness(int8_t v)
 {
-    g_Settings[SettingsIndex::Brightness].param = (v == 1) ? g_Settings[SettingsIndex::Brightness].param + 1 : g_Settings[SettingsIndex::Brightness].param - 1;
-    if (g_Settings[SettingsIndex::Brightness].param > 125)
-        g_Settings[SettingsIndex::Brightness].param = 5;
-    else if (g_Settings[SettingsIndex::Brightness].param < 5)
-        g_Settings[SettingsIndex::Brightness].param = 125;
-
+    doSwitchLogic(g_Settings[SettingsIndex::Brightness].param, v, 5, 125, 1);
     oled.setContrast(uint8_t(g_Settings[SettingsIndex::Brightness].param) * 2);
 
     delay(MIN_ELAPSED_TIME);
@@ -1198,10 +1207,7 @@ void doBrightness(int8_t v)
 //Settings: SSB AVC Switch
 void doSSBAVC(int8_t v = 0)
 {
-    if (g_Settings[SettingsIndex::SVC].param == 0)
-        g_Settings[SettingsIndex::SVC].param = 1;
-    else
-        g_Settings[SettingsIndex::SVC].param = 0;
+    doSwitchLogic(g_Settings[SettingsIndex::SVC].param, v, 0, 1, 1);
 
     if (isSSB())
     {
@@ -1217,11 +1223,7 @@ void doSSBAVC(int8_t v = 0)
 //Settings: Automatic Volume Control
 void doAvc(int8_t v)
 {
-    g_Settings[SettingsIndex::AutoVolControl].param = (v == 1) ? g_Settings[SettingsIndex::AutoVolControl].param + 2 : g_Settings[SettingsIndex::AutoVolControl].param - 2;
-    if (g_Settings[SettingsIndex::AutoVolControl].param > 90)
-        g_Settings[SettingsIndex::AutoVolControl].param = 12;
-    else if (g_Settings[SettingsIndex::AutoVolControl].param < 12)
-        g_Settings[SettingsIndex::AutoVolControl].param = 90;
+    doSwitchLogic(g_Settings[SettingsIndex::AutoVolControl].param, v, 12, 90, 2);
 
     if (g_currentMode != FM)
         g_si4735.setAvcAmMaxGain(g_Settings[SettingsIndex::AutoVolControl].param);
@@ -1232,10 +1234,7 @@ void doAvc(int8_t v)
 //Settings: Sync switch
 void doSync(int8_t v = 0)
 {
-    if (g_Settings[SettingsIndex::Sync].param == 0)
-        g_Settings[SettingsIndex::Sync].param = 1;
-    else
-        g_Settings[SettingsIndex::Sync].param = 0;
+    doSwitchLogic(g_Settings[SettingsIndex::Sync].param, v, 0, 1, 1);
 
     if (isSSB())
     {
@@ -1252,10 +1251,7 @@ void doSync(int8_t v = 0)
 //Settings: FM DeEmp switch (50 or 75)
 void doDeEmp(int8_t v = 0)
 {
-    if (g_Settings[SettingsIndex::DeEmp].param == 0)
-        g_Settings[SettingsIndex::DeEmp].param = 1;
-    else
-        g_Settings[SettingsIndex::DeEmp].param = 0;
+    doSwitchLogic(g_Settings[SettingsIndex::DeEmp].param, v, 0, 1, 1);
 
     if (g_currentMode == FM)
         g_si4735.setFMDeEmphasis(g_Settings[SettingsIndex::DeEmp].param == 0 ? 1 : 2);
@@ -1267,27 +1263,45 @@ void doDeEmp(int8_t v = 0)
 //Settings: SW Units
 void doSWUnits(int8_t v = 0)
 {
-    if (g_Settings[SettingsIndex::SWUnits].param == 0)
-        g_Settings[SettingsIndex::SWUnits].param = 1;
-    else
-        g_Settings[SettingsIndex::SWUnits].param = 0;
-
+    doSwitchLogic(g_Settings[SettingsIndex::SWUnits].param, v, 0, 1, 1);
     DrawSetting(SettingsIndex::SWUnits, false);
 }
 
 //Settings: SW Units
 void doSSBSoftMuteMode(int8_t v = 0)
 {
-    if (g_Settings[SettingsIndex::SSM].param == 0)
-        g_Settings[SettingsIndex::SSM].param = 1;
-    else
-        g_Settings[SettingsIndex::SSM].param = 0;
+    doSwitchLogic(g_Settings[SettingsIndex::SSM].param, v, 0, 1, 1);
 
     if (isSSB())
         g_si4735.setSSBSoftMute(g_Settings[SettingsIndex::SSM].param);
 
     delay(MIN_ELAPSED_TIME);
     DrawSetting(SettingsIndex::SSM, false);
+}
+
+//Settings: SSB Cutoff filter
+void doCutoffFilter(int8_t v)
+{
+    doSwitchLogic(g_Settings[SettingsIndex::CutoffFilter].param, v, 0, 2, 1);
+
+    if (isSSB())
+        updateSSBCutoffFilter();
+    delay(MIN_ELAPSED_TIME);
+    DrawSetting(SettingsIndex::CutoffFilter, false);
+}
+
+//Settings: CPU Frequency divider
+void doCPUSpeed(int8_t v = 0)
+{
+    doSwitchLogic(g_Settings[SettingsIndex::CPUSpeed].param, v, 0, 1, 1);
+
+    noInterrupts();
+    CLKPR = 0x80;
+    CLKPR = g_Settings[SettingsIndex::CPUSpeed].param;
+    interrupts();
+
+    delay(MIN_ELAPSED_TIME);
+    DrawSetting(SettingsIndex::CPUSpeed, false);
 }
 
 //Bandwidth regulation logic
@@ -1306,11 +1320,7 @@ void doBandwidth(uint8_t v)
 
         g_si4735.setSSBAudioBandwidth(g_bandwidthSSB[g_bwIndexSSB].idx);
 
-        // If SSB bandwidth 2 KHz or lower - it's better to enable cutoff filter
-        if (g_bandwidthSSB[g_bwIndexSSB].idx == 0 || g_bandwidthSSB[g_bwIndexSSB].idx == 4 || g_bandwidthSSB[g_bwIndexSSB].idx == 5)
-            g_si4735.setSSBSidebandCutoffFilter(0);
-        else
-            g_si4735.setSSBSidebandCutoffFilter(1);
+        updateSSBCutoffFilter();
     }
     else if (g_currentMode == AM)
     {
