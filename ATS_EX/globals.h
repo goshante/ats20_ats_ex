@@ -40,7 +40,8 @@ enum SettingType
 {
     ZeroAuto,
     Num,
-    Switch
+    Switch,
+    SwitchAuto
 };
 
 struct SettingsItem
@@ -60,18 +61,22 @@ void doSync(int8_t v = 0);
 void doDeEmp(int8_t v = 0);
 void doSWUnits(int8_t v = 0);
 void doSSBSoftMuteMode(int8_t v = 0);
+void doCutoffFilter(int8_t v);
+void doCPUSpeed(int8_t v = 0);
 
 SettingsItem g_Settings[] =
 {
-    { "ATT", 0,  SettingType::ZeroAuto, doAttenuation     },  //Attenuation
-    { "SM ", 0,  SettingType::Num,      doSoftMute        },  //Soft Mute
-    { "SVC", 1,  SettingType::Switch,   doSSBAVC          },  //SSB AVC Switch
-    { "Syn", 0,  SettingType::Switch,   doSync            },  //SSB Sync
-    { "DeE", 1,  SettingType::Switch,   doDeEmp           },  //FM DeEmphasis (0 - 50, 1 - 75)
-    { "AVC", 46, SettingType::Num,      doAvc             },  //Automatic Volume Control
-    { "Scr", 80, SettingType::Num,      doBrightness      },  //Screen Brightness
-    { "SW ", 0,  SettingType::Switch,   doSWUnits         },  //SW Units
-    { "SSM", 1,  SettingType::Switch,   doSSBSoftMuteMode },  //SSB Soft Mute Mode
+    { "ATT", 0,  SettingType::ZeroAuto,     doAttenuation     },  //Attenuation
+    { "SM ", 0,  SettingType::Num,          doSoftMute        },  //Soft Mute
+    { "SVC", 1,  SettingType::Switch,       doSSBAVC          },  //SSB AVC Switch
+    { "Syn", 0,  SettingType::Switch,       doSync            },  //SSB Sync
+    { "DeE", 1,  SettingType::Switch,       doDeEmp           },  //FM DeEmphasis (0 - 50, 1 - 75)
+    { "AVC", 46, SettingType::Num,          doAvc             },  //Automatic Volume Control
+    { "Scr", 80, SettingType::Num,          doBrightness      },  //Screen Brightness
+    { "SW ", 0,  SettingType::Switch,       doSWUnits         },  //SW Units
+    { "SSM", 1,  SettingType::Switch,       doSSBSoftMuteMode },  //SSB Soft Mute Mode
+    { "COF", 1,  SettingType::SwitchAuto,   doCutoffFilter    },  //SSB Cutoff Filter
+    { "CPU", 1,  SettingType::Switch,       doCPUSpeed        },  //CPU Frequency
 };
 
 enum SettingsIndex
@@ -85,6 +90,8 @@ enum SettingsIndex
     Brightness,
     SWUnits,
     SSM,
+    CutoffFilter,
+    CPUSpeed,
     SETTINGS_MAX
 };
 
