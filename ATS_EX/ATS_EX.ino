@@ -107,7 +107,7 @@ void setup()
         oled.print("ATS-20 RECEIVER ");
         oled.invertOutput(false);
         oled.setCursor(0, 2);
-        oled.print("  ATS_EX v1.04");
+        oled.print("  ATS_EX v1.05");
         oled.setCursor(0, 4);
         oled.print(" Goshante 2024\0");
         oled.setCursor(0, 6);

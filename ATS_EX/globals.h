@@ -143,23 +143,25 @@ Bandwidth g_bandwidthFM[] =
 
 int g_tabStep[] =
 {
-    // AM in KHz
+    // AM steps in KHz
     1,
     5,
     9,
     10,
+    // Large AM steps in KHz
     50,
     100,
     1000,
-    // SSB in Hz
+    // SSB steps in Hz
     10,
     25,
     50,
-    100
+    100,
+    500
 };
 int g_amTotalSteps = 7;
 int g_amTotalStepsSSB = 4; //Prevent large AM steps appear in SSB mode
-int g_ssbTotalSteps = 3;
+int g_ssbTotalSteps = 5;
 volatile int g_stepIndex = 3;
 
 int g_tabStepFM[] =
