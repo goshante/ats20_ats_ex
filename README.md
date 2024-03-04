@@ -31,7 +31,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **A lot of steps are available for every mode**. In AM you have 1/5/9/10/50/100k/1M steps, in SSB you have 1/5/9/10k steps and 10/25/50/100/500Hz steps for more precise tuning. In FM mode you have 10k/100k/1M steps.
  - Added settings page. You can configure **Gain Control and ATT**, **Soft Mute**, **Automatic Volume Control** (AVC), On or Off **AVC for SSB mode**,  **DeEmphasis** for FM mode and enable or disable **SSB Sync** mode and other useful settings.
  - Adjustable **screen brightness**.
- - Adjustable **CPU Frequency** for power saving purposes.
+ - Adjustable **CPU Frequency** for power saving purposes and reducing interference.
  - Added **Mute button** and **Display on/off button**.
  - Added **Battery charge status** (Requires simple physical mod: Make **voltage divider** from two 10 KOhm resistors and solder it's middle output to **A2** pin)
  - Added **S-Meter**

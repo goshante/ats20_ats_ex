@@ -63,7 +63,7 @@ void utoa(char* out, uint16_t num)
 void convertToChar(char* strValue, uint16_t value, uint8_t len, uint8_t dot = 0, uint8_t separator = 0, uint8_t space = ' ')
 {
     char d;
-    int i;
+    int8_t i;
     for (i = (len - 1); i >= 0; i--)
     {
         d = value % 10;
@@ -71,6 +71,7 @@ void convertToChar(char* strValue, uint16_t value, uint8_t len, uint8_t dot = 0,
         strValue[i] = d + 48;
     }
     strValue[len] = '\0';
+
     if (dot > 0)
     {
         for (int i = len; i >= dot; i--)
@@ -82,6 +83,7 @@ void convertToChar(char* strValue, uint16_t value, uint8_t len, uint8_t dot = 0,
     }
     i = 0;
     len--;
+
     while ((i < len) && ('0' == strValue[i]))
     {
         strValue[i++] = space;

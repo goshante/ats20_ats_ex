@@ -6,12 +6,6 @@
 //EEPROM Settings
 #define STORE_TIME 10000 // Inactive time to save our settings
 
-//Band types
-#define FM_BAND_TYPE  0
-#define MW_BAND_TYPE  1
-#define SW_BAND_TYPE  2
-#define LW_BAND_TYPE  3
-
 // OLED Const values
 #define DEFAULT_FONT FONT8X16POB
 #define RST_PIN -1
@@ -52,3 +46,8 @@
 #define SW_LIMIT_LOW		1700
 #define SW_LIMIT_HIGH		30000
 #define LW_LIMIT_LOW_SSB	(g_bandList[0].minimumFreq - 16)
+
+#define BAND_DELAY                 2
+#define VOLUME_DELAY               1 
+
+#define buttonEvent                NULL

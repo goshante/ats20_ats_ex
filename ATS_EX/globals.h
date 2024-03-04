@@ -96,8 +96,8 @@ enum SettingsIndex
 };
 
 const uint8_t g_SettingsMaxPages = 2;
-uint8_t g_SettingSelected = 0;
-uint8_t g_SettingsPage = 1;
+int8_t g_SettingSelected = 0;
+int8_t g_SettingsPage = 1;
 bool g_SettingEditing = false;
 
 //For managing BW
@@ -110,35 +110,35 @@ struct Bandwidth
 int8_t g_bwIndexSSB = 4;
 Bandwidth g_bandwidthSSB[] =
 {
-    {4, "0.5k"},
-    {5, "1.0k"},
-    {0, "1.2k"},
-    {1, "2.2k"},
-    {2, "3.0k"},
-    {3, "4.0k"}
+    { 4, "0.5k" },
+    { 5, "1.0k" },
+    { 0, "1.2k" },
+    { 1, "2.2k" },
+    { 2, "3.0k" },
+    { 3, "4.0k" }
 };
 
 int8_t g_bwIndexAM = 4;
-const int g_maxFilterAM = 6;
+const uint8_t g_maxFilterAM = 6;
 Bandwidth g_bandwidthAM[] =
 {
-    {4, "1.0k"}, // 0
-    {5, "1.8k"}, // 1
-    {3, "2.0k"}, // 2
-    {6, "2.5k"}, // 3
-    {2, "3.0k"}, // 4 - Default
-    {1, "4.0k"}, // 5
-    {0, "6.0k"}  // 6
+    { 4, "1.0k" }, // 0
+    { 5, "1.8k" }, // 1
+    { 3, "2.0k" }, // 2
+    { 6, "2.5k" }, // 3
+    { 2, "3.0k" }, // 4 - Default
+    { 1, "4.0k" }, // 5
+    { 0, "6.0k" }  // 6
 };
 
 int8_t g_bwIndexFM = 0;
 Bandwidth g_bandwidthFM[] =
 {
-    {0, "AUTO"},
-    {1, "110k"},
-    {2, " 84k"},
-    {3, " 60k"},
-    {4, " 40k"}
+    { 0, "AUTO" },
+    { 1, "110k" },
+    { 2, " 84k" },
+    { 3, " 60k" },
+    { 4, " 40k" }
 };
 
 int g_tabStep[] =
@@ -159,64 +159,79 @@ int g_tabStep[] =
     100,
     500
 };
-int g_amTotalSteps = 7;
-int g_amTotalStepsSSB = 4; //Prevent large AM steps appear in SSB mode
-int g_ssbTotalSteps = 5;
-volatile int g_stepIndex = 3;
+uint8_t g_amTotalSteps = 7;
+uint8_t g_amTotalStepsSSB = 4; //Prevent large AM steps appear in SSB mode
+uint8_t g_ssbTotalSteps = 5;
+volatile int8_t g_stepIndex = 3;
 
-int g_tabStepFM[] =
+uint8_t g_tabStepFM[] =
 {
     5,  // 50 KHz
     10, // 100 KHz
     100 // 1 MHz
 };
-uint16_t g_FMStepIndex = 1;
-const int g_lastStepFM = (sizeof(g_tabStepFM) / sizeof(int)) - 1;
+int8_t g_FMStepIndex = 1;
+const uint8_t g_lastStepFM = (sizeof(g_tabStepFM) / sizeof(int)) - 1;
 
-//Band table structure
+//Band table structures
+enum BandType : uint8_t
+{
+    LW_BAND_TYPE,
+    MW_BAND_TYPE,
+    SW_BAND_TYPE,
+    FM_BAND_TYPE
+};
+
 struct Band
 {
-    uint8_t bandType;
+    BandType bandType;
     uint16_t minimumFreq;
     uint16_t maximumFreq;
     uint16_t currentFreq;
-    uint16_t currentStepIdx;
+    uint8_t currentStepIdx;
     int8_t bandwidthIdx;     // Bandwidth table index (internal table in Si473x controller)
-    char* tag;
 };
 
-const char _literal_SW[3] = "SW"; //To reduce binary image size
+char _literal_SW[3] = "SW"; //To reduce binary image size
 const char _literal_EmptyLine[14] = "             ";
+
+char* bandTags[] =
+{
+    "LW",
+    "MW",
+    "SW",
+    "  ",    //It looks better
+};
 
 Band g_bandList[] =
 {
-    {LW_BAND_TYPE, 153, 520, 300, 0, 4, "LW"},
-    {MW_BAND_TYPE, 520, 1710, 1476, 3, 4, "MW"},
-    {SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4, _literal_SW},     // 160 Meter
-    {SW_BAND_TYPE, 3500, 4500, 3700, 0, 5, _literal_SW},     // 80 Meter
-    {SW_BAND_TYPE, 4500, 5600, 4850, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 5600, 6800, 6000, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 6800, 7300, 7100, 0, 4, _literal_SW},     // 40 Meter
-    {SW_BAND_TYPE, 7200, 8500, 7200, 1, 4, _literal_SW},     // 41 Meter
-    {SW_BAND_TYPE, 8500, 10000, 9604, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 10000, 11200, 10100, 0, 4, _literal_SW},  // 30 Meter
-    {SW_BAND_TYPE, 11200, 12500, 11940, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 13400, 13900, 13600, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 14000, 14500, 14200, 0, 4, _literal_SW},  // 20 Meter
-    {SW_BAND_TYPE, 15000, 15900, 15300, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 17200, 17900, 17600, 1, 4, _literal_SW},
-    {SW_BAND_TYPE, 18000, 18300, 18100, 0, 4, _literal_SW},  // 17 Meter
-    {SW_BAND_TYPE, 21000, 21400, 21200, 0, 4, _literal_SW},  // 15 Meter
-    {SW_BAND_TYPE, 21400, 21900, 21500, 1, 4, _literal_SW},  // 13 Meter
-    {SW_BAND_TYPE, 24890, 26200, 24940, 0, 4, _literal_SW},  // 12 Meter
-    {SW_BAND_TYPE, 26200, 28000, 27500, 0, 4, "CB"},  // CB Band (11 Meter)
-    {SW_BAND_TYPE, 28000, SW_LIMIT_HIGH, 28400, 0, 4, _literal_SW},  // 10 Meter
-    {FM_BAND_TYPE, 6400, 10800, 7000, 1, 0, "  "},
-    {FM_BAND_TYPE, 8400, 10800, 10570, 1, 0, "  "},
+    { LW_BAND_TYPE, 153, 520, 300, 0, 4 },
+    { MW_BAND_TYPE, 520, 1710, 1476, 3, 4 },
+    { SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4 },     // 160 Meter
+    { SW_BAND_TYPE, 3500, 4500, 3700, 0, 5 },     // 80 Meter
+    { SW_BAND_TYPE, 4500, 5600, 4850, 1, 4 },
+    { SW_BAND_TYPE, 5600, 6800, 6000, 1, 4 },
+    { SW_BAND_TYPE, 6800, 7300, 7100, 0, 4 },     // 40 Meter
+    { SW_BAND_TYPE, 7200, 8500, 7200, 1, 4 },     // 41 Meter
+    { SW_BAND_TYPE, 8500, 10000, 9604, 1, 4 },
+    { SW_BAND_TYPE, 10000, 11200, 10100, 0, 4 },  // 30 Meter
+    { SW_BAND_TYPE, 11200, 12500, 11940, 1, 4 },
+    { SW_BAND_TYPE, 13400, 13900, 13600, 1, 4 },
+    { SW_BAND_TYPE, 14000, 14500, 14200, 0, 4 },  // 20 Meter
+    { SW_BAND_TYPE, 15000, 15900, 15300, 1, 4 },
+    { SW_BAND_TYPE, 17200, 17900, 17600, 1, 4 },
+    { SW_BAND_TYPE, 18000, 18300, 18100, 0, 4 },  // 17 Meter
+    { SW_BAND_TYPE, 21000, 21400, 21200, 0, 4 },  // 15 Meter
+    { SW_BAND_TYPE, 21400, 21900, 21500, 1, 4 },  // 13 Meter
+    { SW_BAND_TYPE, 24890, 26200, 24940, 0, 4 },  // 12 Meter
+    { SW_BAND_TYPE, 26200, 28000, 27500, 0, 4 },  // CB Band (11 Meter)
+    { SW_BAND_TYPE, 28000, SW_LIMIT_HIGH, 28400, 0, 4 },  // 10 Meter
+    { FM_BAND_TYPE, 6400, 10800, 7000, 1, 0 },
+    { FM_BAND_TYPE, 8400, 10800, 10570, 1, 0 },
 };
 
-const int g_lastBand = (sizeof(g_bandList) / sizeof(Band)) - 1;
-int g_bandIndex = 1;
+const uint8_t g_lastBand = (sizeof(g_bandList) / sizeof(Band)) - 1;
+int8_t g_bandIndex = 1;
 
 // Modulation
 volatile uint8_t g_currentMode = FM;
