@@ -691,17 +691,28 @@ void showCharge(bool forceShow)
     {
         char buf[4];
         buf[0] = 0;
+        buf[3] = 0;
         int16_t percents = (((averageVoltageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
         bool isUsbCable = percents > 120;
 
-        if (percents > 100)
+        if (percents >= 100)
             percents = 100;
 
         else if (percents < 0)
             percents = 0;
 
         if (!isUsbCable)
-            convertToChar(buf, percents, 3);
+            convertToChar(buf, percents, ilen(percents));
+        else
+        {
+            buf[0] = '.';
+            buf[1] = '.';
+            buf[2] = '.';
+        }
+
+        if (ilen(percents) < 3)
+            buf[2] = '%';
+
 
         if (!g_settingsActive && !g_sMeterOn && !g_displayRDS)
             oledPrint(buf, 102, 6, DEFAULT_FONT);

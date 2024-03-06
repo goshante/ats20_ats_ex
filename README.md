@@ -20,7 +20,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - Fully **reworked interface**. No more ugly stretched fonts. Minimalistic readable interface. 7-Segment frequency font is inspired by swling firmware, but created by me.
  - Fully **reworked controls**. You can read user manual below.
  - **BFO is now part of main frequency** and regulated by frequency step, it is no more dedicated option that makes frequency surfing experience terrible. SSB mode has more precise steps.
- - **LW** Band: From **149** KHz to **520** KHz
+ - **LW** Band: From **153** (or **138** in SSB mode) KHz to **520** KHz 
  - **MW** Band: From **520** to **1710** KHz
  - **SW** Band: From **1700** to **30000** KHz (With a lot of sub-bands)
  - **FM** Band: From **64** to **108** MHz. (Two sub-bands from **64** and from **84** MHz)
