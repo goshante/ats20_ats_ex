@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.05 (04.03.2024)
+**Latest version:** v1.06 (06.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.05/ATS_EX_v1.05.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.06/ATS_EX_v1.06.hex)
 
 
 <p align="center">
@@ -24,6 +24,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **MW** Band: From **520** to **1710** KHz
  - **SW** Band: From **1700** to **30000** KHz (With a lot of sub-bands)
  - **FM** Band: From **64** to **108** MHz. (Two sub-bands from **64** and from **84** MHz)
+ - **Dynamic RDS** for **FM** radio stations with an option to switch RDS information lines (Displays UP to 16 characters).
  - Added **CW mode**
  - Poorly designed RSSI was removed and replaced with optionaly displayed **S-meter** like scale.
  - All **SW bands** now feel like one large band **from 1700 to 30000 KHz**. It's possible to switch between them, but they no longer restrict the frequency step to the sub-band limits.
@@ -38,7 +39,6 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **Atm328p controller is now running on it's full clock**. Controls have to be more responsive. (Don't know how it impacts on battery drain.)
  - Code refactoring, optimizations
  - Fixed some bugs
- - **Removed RDS for FM**, but can be added in future.
  # How to flash it on my receiver?
  You can use anything that is able to flash .hex firmware to Arduino. You only need Micro USB cable and **USB UART** driver (It probably will be driver for **CH341**). I recommend you to use **AVRDUDESS** if you use Windows. It's easy GUI tool that can dump and flash images to Atmel microcontrollers. Just select **"Arduino Nano (ATmega328P)"** from **Presets**, select your actual **COM Port** and **path to firmware** .hex file. Select **"Write"** in **Flash** section and press **Go**. 
 
@@ -46,18 +46,40 @@ Or you can build it yourself. I use Visual Studio 2022 with VSMicro extension th
 
 # User manual
 **ATTENTION:** After flashing it's strongly **recommended to reset EEPROM memory**. To do this just hold the **Encoder Button** while turning receiver on.
-### Buttons
 
- 1. **BAND+** : Short press to enter **Band selection mode**. Select band with **Encoder Rotation** and confirm with **encoder button** or press **BAND+** again. In **settings mode** this button is switching between **settings pages**. Hold to **scroll quickly** through bands forward.
- 2. **VOL+** : Short press to enter **Volume regulation mode**. Set volume with **Encoder Rotation** and confirm with **Encoder Button** or press **VOL+** again. Long press increasing volume very fast.
- 3. **STEP** : Short press to enter **Step regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **STEP** again.
- 4. **AGC** : Short press to **toggle display on and off**. Long press to toggle **Sync** mode while **SSB** is active.
- 5. **BAND-** : Short press to open or close **Settings screen**. Hold to **scroll quickly** through bands backwards.
- 6. **VOL-** : Short press to **toggle volume mute on and off**. Long press decreasing volume very fast.
- 7. **BW** : Short press to enter **Bandwidth regulation mode**. Set step with **Encoder Rotation** and confirm with **Encoder Button** or press **BW** again. Long press to show/hide **S-Meter**.
- 8. **MODE** : Short press to **switch between modulations**. On **FM** band **WFM** is the only available modulation and **MODE** button is disabled. On all other bands next modulations are available: **AM/USB/LSB/CW**. In all modulations *(except AM and WFM (FM))* you have improved frequency tuning without interrupting every step.
- 9. **Encoder Rotation** : Frequency **Tune** or settings **navigation**.
- 10. **Encoder Button** :  In **non-SSB mode** - Short press to **scan** for stations or **confirm** your selection. Resets **EEPROM** memory when held on startup. In **SSB** mode it works as **STEP** short press button.
+### Button functionality
+#### **BAND+** Button
+ 1. **Band selection**: Short press to enter band selection mode. Select the band using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **BAND+** again. Or hold **BAND+** to quickly scroll through bands forward.
+ 2. **Settings page switch**: This button switches **settings pages** while settings are open.
+#### **BAND-** Button
+ 1. **Settings menu**: Short press to open/close **settings menu**.
+ 2. **Band selection**: Long press **BAND-** to quickly scroll through bands backward.
+#### **VOL+** Button
+ 1. **Volume adjustment**: Short press to enter **volume adjustment** mode. Set the volume using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **VOL+** again.
+ 2. **Quick volume increase**: Hold for quick volume increase.
+#### **VOL-** Button
+ 1. **Mute**: Short press to **mute and unmute**.
+ 2. **Quick volume decrease**: Hold for quick volume decrease.
+#### **STEP** Button
+ 1. **Step adjustment**: Short press to enter **step adjustment** mode. Set the step with **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **STEP** again.
+ 2. **Signal level scale**: Long press shows a signal level bar at the bottom, **similar to an S-meter**. Can be turned off with another long or short press, or by changing the band.
+#### **AGC** Button
+ 1. **Display on/off**: Short press works as a display switch.
+ 2. **Sync mode for SSB**: Long press to switch to **Sync** mode when **SSB** modulation is active.
+#### **BW** Button
+ 1. **Bandwidth adjustment**: Short press to enter **bandwidth adjustment** mode. Set the step using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **BW** again. Each modulation has its set of steps.
+#### **MODE** Button
+ 1. **Modulation selection in AM/SSB mode**: Short press to **switch between modulations** in AM/SSB mode. In the **FM** band, the only available modulation is **WFM** (Wide FM), and it's not possible to switch modulation in the FM band (due to Si4735 chip limitations). On all other bands, the following modulations are available: **AM/USB/LSB/CW**. In all modulations (especially in SSB), improved frequency tuning without interruption at each step.
+ 2. **RDS in FM band**: Short press allows displaying a **metadata line** decoded from the RDS traffic of the current radio station below the frequency. As long as synchronization is not lost, the RDS string can **dynamically update** if the FM radio station cyclically outputs different information there. In this mode, you can switch between **3 different RDS information modes** using the **Encoder Button**: **Station Name**, **Station Information**, and **Program Information**. If any information cell is not decoded or is missing, three dots **...** will be displayed. If RDS data did not display upon activation or after you stopped on right frequency, you should turn RDS off and on again OR move the encoder to another frequency and return to allow the Si4735 chip to synchronize with the RDS traffic stream again. If synchronization is lost, it automatically restores only after changing frequencies.
+#### **Encoder Rotation**
+1. **Frequency Tuning**: In radio mode (normal mode), rotation adjusts the frequency by the step indicated at the bottom of the screen.
+2. **Settings navigation**: In settings mode, the encoder allows you to select the necessary setting and, after selecting, change its value.
+#### **Encoder Button**
+1. **Frequency scan**: Works **only in FM and AM** modulations. Press to scan stations by frequency in the last direction with the given step.
+2. **Universal button**: Confirms settings, makes selections, switches RDS modes.
+3. **EEPROM reset**: Important functionality that allows **resetting settings to defaults**. To do this, turn on the receiver with the encoder button already pressed. After that, the **EEPROM RESET** message should appear.
+4. **Quick step setting in SSB**: Only for SSB mode - pressing allows immediate entry into step adjustment mode.
+
 ### Settings
 Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder Button**, change value with **Encoder Rotation** and save it with **Encoder Button**. Close settings with **BAND-** button. Navigate between **settings pages** with **BAND+** button.
 
