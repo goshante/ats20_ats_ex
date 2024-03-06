@@ -41,7 +41,6 @@ void utoa(char* out, uint16_t num)
     char* p = out;
     if (num == 0)
         *p++ = '0';
-
     else
     {
         for (uint16_t base = 10000; base > 0; base /= 10)
@@ -111,4 +110,12 @@ void splitFreq(uint16_t& khz, uint16_t& tail)
     int32_t freq = (uint32_t(g_currentFrequency) * 1000) + g_currentBFO;
     khz = freq / 1000;
     tail = abs(freq % 1000) / 10;
+}
+
+uint8_t strlen8(const char* str)
+{
+    uint8_t n = 0;
+    while (str[n] != '\0')
+        n++;
+    return n;
 }

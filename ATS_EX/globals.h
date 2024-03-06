@@ -1,6 +1,6 @@
 #pragma once
 
-const uint8_t g_app_id = 45;
+const uint8_t g_app_id = 51;
 const int g_eeprom_address = 0;
 long g_storeTime = millis();
 
@@ -15,6 +15,8 @@ bool g_cmdBand = false;
 bool g_settingsActive = false;
 bool g_sMeterOn = false;
 bool g_displayOn = true;
+bool g_displayRDS = false;
+bool g_rdsSwitchPressed = false;
 
 uint8_t g_muteVolume = 0;
 int g_currentBFO = 0;
@@ -63,6 +65,7 @@ void doSWUnits(int8_t v = 0);
 void doSSBSoftMuteMode(int8_t v = 0);
 void doCutoffFilter(int8_t v);
 void doCPUSpeed(int8_t v = 0);
+//void doRDSErrorLevel(int8_t v);
 
 SettingsItem g_Settings[] =
 {
@@ -75,8 +78,9 @@ SettingsItem g_Settings[] =
     { "Scr", 80, SettingType::Num,          doBrightness      },  //Screen Brightness
     { "SW ", 0,  SettingType::Switch,       doSWUnits         },  //SW Units
     { "SSM", 1,  SettingType::Switch,       doSSBSoftMuteMode },  //SSB Soft Mute Mode
-    { "COF", 1,  SettingType::SwitchAuto,   doCutoffFilter    },  //SSB Cutoff Filter
-    { "CPU", 1,  SettingType::Switch,       doCPUSpeed        },  //CPU Frequency
+    { "COF", 0,  SettingType::SwitchAuto,   doCutoffFilter    },  //SSB Cutoff Filter
+    { "CPU", 0,  SettingType::Switch,       doCPUSpeed        },  //CPU Frequency
+    //{ "RDS", 1,  SettingType::Num,        doRDSErrorLevel   },  //RDS ErrorLevel
 };
 
 enum SettingsIndex
@@ -92,6 +96,7 @@ enum SettingsIndex
     SSM,
     CutoffFilter,
     CPUSpeed,
+    //RDSError,
     SETTINGS_MAX
 };
 
@@ -164,14 +169,14 @@ uint8_t g_amTotalStepsSSB = 4; //Prevent large AM steps appear in SSB mode
 uint8_t g_ssbTotalSteps = 5;
 volatile int8_t g_stepIndex = 3;
 
-uint8_t g_tabStepFM[] =
+int8_t g_tabStepFM[] =
 {
     5,  // 50 KHz
     10, // 100 KHz
     100 // 1 MHz
 };
 int8_t g_FMStepIndex = 1;
-const uint8_t g_lastStepFM = (sizeof(g_tabStepFM) / sizeof(int)) - 1;
+const int8_t g_lastStepFM = (sizeof(g_tabStepFM) / sizeof(int8_t)) - 1;
 
 //Band table structures
 enum BandType : uint8_t
@@ -188,12 +193,22 @@ struct Band
     uint16_t minimumFreq;
     uint16_t maximumFreq;
     uint16_t currentFreq;
-    uint8_t currentStepIdx;
+    int8_t currentStepIdx;
     int8_t bandwidthIdx;     // Bandwidth table index (internal table in Si473x controller)
 };
 
+enum RDSActiveInfo : uint8_t
+{
+    StationName,
+    StationInfo,
+    ProgramInfo
+};
+uint8_t g_rdsActiveInfo = RDSActiveInfo::StationName;
+char g_rdsPrevLen = 0;
+char* g_RDSCells[3];
+
 char _literal_SW[3] = "SW"; //To reduce binary image size
-const char _literal_EmptyLine[14] = "             ";
+char _literal_EmptyLine[17] = "                ";
 
 char* bandTags[] =
 {
@@ -234,8 +249,23 @@ const uint8_t g_lastBand = (sizeof(g_bandList) / sizeof(Band)) - 1;
 int8_t g_bandIndex = 1;
 
 // Modulation
+enum Modulations : uint8_t
+{
+    AM,
+    LSB,
+    USB,
+    CW,
+    FM
+};
 volatile uint8_t g_currentMode = FM;
-const char* g_bandModeDesc[] = { "FM ", "LSB", "USB", "AM ", "CW " };
+const char* g_bandModeDesc[] = 
+{ 
+    "AM ",
+    "LSB",
+    "USB",
+    "CW ",
+    "FM "
+};
 volatile uint8_t g_prevMode = FM;
 uint8_t g_seekDirection = 1;
 

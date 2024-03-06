@@ -1,8 +1,5 @@
 #pragma once
 
-//Removed, but can be easy implemented. Required Si4735 chip, RDS is not supported in 32-34 chips
-#define USE_RDS       0 
-
 //EEPROM Settings
 #define STORE_TIME 10000 // Inactive time to save our settings
 
@@ -34,13 +31,6 @@
 #define MIN_ELAPSED_TIME 100
 #define MIN_ELAPSED_RSSI_TIME 150
 #define DEFAULT_VOLUME 25
-
-// Modulations
-#define FM  0
-#define LSB 1
-#define USB 2
-#define AM  3
-#define CW  4
 
 // Band settings
 #define SW_LIMIT_LOW		1700
