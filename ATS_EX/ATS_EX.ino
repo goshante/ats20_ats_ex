@@ -60,6 +60,8 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
+#define APP_VERSION 109
+
 //Initialize controller
 void setup()
 {
@@ -81,8 +83,7 @@ void setup()
     if (!(PINC & (1 << (ENCODER_BUTTON - 14))))
     {
         saveAllReceiverInformation();
-        EEPROM.write(g_eeprom_address, g_AppID);
-        
+        EEPROM.write(EEPROM_VERSION_ADDRESS, APP_VERSION);
         oled.print("  EEPROM RESET");
         oled.setCursor(0, 2);
         for (uint8_t i = 0; i < 16; i++)
@@ -94,7 +95,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("  ATS_EX v1.08", 0, 2);
+        oledPrint("  ATS_EX v1.09", 0, 2);
         oledPrint(" Goshante 2024\0", 0, 4);
         oledPrint(" Best firmware", 0, 6);
         delay(2000);
@@ -111,7 +112,7 @@ void setup()
     delay(500);
 
     //Load settings from EEPROM
-    if (EEPROM.read(g_eeprom_address) == g_AppID)
+    if (EEPROM.read(EEPROM_VERSION_ADDRESS) == APP_VERSION)
         readAllReceiverInformation();
     else
         saveAllReceiverInformation();
@@ -247,55 +248,53 @@ void updateSSBCutoffFilter()
 //EEPROM Save
 void saveAllReceiverInformation()
 {
-    uint8_t addr_offset;
-    EEPROM.update(g_eeprom_address, g_AppID);
-    EEPROM.update(g_eeprom_address + 1, g_muteVolume > 0 ? g_muteVolume : g_si4735.getVolume());
-    EEPROM.update(g_eeprom_address + 2, g_bandIndex);
-    EEPROM.update(g_eeprom_address + 3, g_currentMode);
-    EEPROM.update(g_eeprom_address + 4, g_currentBFO >> 8);
-    EEPROM.update(g_eeprom_address + 5, g_currentBFO & 0XFF);
-    EEPROM.update(g_eeprom_address + 6, g_FMStepIndex);
-    EEPROM.update(g_eeprom_address + 7, g_prevMode);
+    uint8_t addr = EEPROM_DATA_START_ADDRESS;
+    EEPROM.update(EEPROM_VERSION_ADDRESS, APP_VERSION);
+    EEPROM.update(addr++, g_muteVolume > 0 ? g_muteVolume : g_si4735.getVolume());
+    EEPROM.update(addr++, g_bandIndex);
+    EEPROM.update(addr++, g_currentMode);
+    EEPROM.update(addr++, g_currentBFO >> 8);
+    EEPROM.update(addr++, g_currentBFO & 0XFF);
+    EEPROM.update(addr++, g_FMStepIndex);
+    EEPROM.update(addr++, g_prevMode);
 
-    addr_offset = 8;
     g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
 
     for (uint8_t i = 0; i <= g_lastBand; i++)
     {
-        EEPROM.update(addr_offset++, (g_bandList[i].currentFreq >> 8));
-        EEPROM.update(addr_offset++, (g_bandList[i].currentFreq & 0xFF));
-        EEPROM.update(addr_offset++, ((g_bandList[i].bandType != FM_BAND_TYPE && g_bandList[i].currentStepIdx >= g_amTotalSteps) ? 0 : g_bandList[i].currentStepIdx));
-        EEPROM.update(addr_offset++, g_bandList[i].bandwidthIdx);
+        EEPROM.update(addr++, (g_bandList[i].currentFreq >> 8));
+        EEPROM.update(addr++, (g_bandList[i].currentFreq & 0xFF));
+        EEPROM.update(addr++, ((g_bandList[i].bandType != FM_BAND_TYPE && g_bandList[i].currentStepIdx >= g_amTotalSteps) ? 0 : g_bandList[i].currentStepIdx));
+        EEPROM.update(addr++, g_bandList[i].bandwidthIdx);
     }
 
     for (uint8_t i = 0; i < SettingsIndex::SETTINGS_MAX; i++)
-        EEPROM.update(addr_offset++, g_Settings[i].param);
+        EEPROM.update(addr++, g_Settings[i].param);
 }
 
 //EEPROM Load
 void readAllReceiverInformation()
 {
-    uint8_t addr_offset;
+    uint8_t addr = EEPROM_DATA_START_ADDRESS;
     int8_t bwIdx;
-    g_volume = EEPROM.read(g_eeprom_address + 1);
-    g_bandIndex = EEPROM.read(g_eeprom_address + 2);
-    g_currentMode = EEPROM.read(g_eeprom_address + 3);
-    g_currentBFO = EEPROM.read(g_eeprom_address + 4) << 8;
-    g_currentBFO |= EEPROM.read(g_eeprom_address + 5);
-    g_FMStepIndex = EEPROM.read(g_eeprom_address + 6);
-    g_prevMode = EEPROM.read(g_eeprom_address + 7);
+    g_volume = EEPROM.read(addr++);
+    g_bandIndex = EEPROM.read(addr++);
+    g_currentMode = EEPROM.read(addr++);
+    g_currentBFO = EEPROM.read(addr++) << 8;
+    g_currentBFO |= EEPROM.read(addr++);
+    g_FMStepIndex = EEPROM.read(addr++);
+    g_prevMode = EEPROM.read(addr++);
 
-    addr_offset = 8;
     for (uint8_t i = 0; i <= g_lastBand; i++)
     {
-        g_bandList[i].currentFreq = EEPROM.read(addr_offset++) << 8;
-        g_bandList[i].currentFreq |= EEPROM.read(addr_offset++);
-        g_bandList[i].currentStepIdx = EEPROM.read(addr_offset++);
-        g_bandList[i].bandwidthIdx = EEPROM.read(addr_offset++);
+        g_bandList[i].currentFreq = EEPROM.read(addr++) << 8;
+        g_bandList[i].currentFreq |= EEPROM.read(addr++);
+        g_bandList[i].currentStepIdx = EEPROM.read(addr++);
+        g_bandList[i].bandwidthIdx = EEPROM.read(addr++);
     }
 
     for (uint8_t i = 0; i < SettingsIndex::SETTINGS_MAX; i++)
-        g_Settings[i].param = EEPROM.read(addr_offset++);
+        g_Settings[i].param = EEPROM.read(addr++);
 
     oled.setContrast(uint8_t(g_Settings[SettingsIndex::Brightness].param) * 2);
 
@@ -623,6 +622,7 @@ void switchSettings()
     else
     {
         g_settingsActive = false;
+        saveAllReceiverInformation();
         showStatus();
     }
 }
@@ -679,11 +679,11 @@ void showCharge(bool forceShow)
 
     //This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
     //Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
-    const uint16_t chargeFull = 651;    //2.1v
-    const uint16_t chargeLow = 558;     //1.8v
+    const uint16_t chargeFull = 651;    //2.10v of battery with 3.30v reference
+    const uint16_t chargeLow = 558;     //1.80v of battery with 3.30v reference
     static uint32_t lastChargeShow = 0;
     static uint16_t averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
-
+    static uint16_t lastPercents = 0;
     if ((millis() - lastChargeShow) > 10000 || lastChargeShow == 0 || forceShow)
     {
         char buf[4];
@@ -697,10 +697,12 @@ void showCharge(bool forceShow)
         else if (percents < 0)
             percents = 0;
 
-        if (!isUsbCable)
-            convertToChar(buf, percents, ilen(percents));
+        if (isUsbCable) //Show always last charge after connecting USB
+            percents = lastPercents;
         else
-            buf[0] = '\0';
+            lastPercents = percents;
+
+        convertToChar(buf, percents, ilen(percents));
 
         if (ilen(percents) < 3)
             buf[2] = '%';
@@ -713,6 +715,7 @@ void showCharge(bool forceShow)
     }
     else
     {
+        int sample = analogRead(BATTERY_VOLTAGE_PIN);
         if (averageVoltageSamples > 0)
             averageVoltageSamples = (averageVoltageSamples + analogRead(BATTERY_VOLTAGE_PIN)) / 2;
         else

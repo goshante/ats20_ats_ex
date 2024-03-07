@@ -1,7 +1,5 @@
 #pragma once
 
-const uint8_t g_AppID = 183;
-const int g_eeprom_address = 0;
 long g_storeTime = millis();
 
 bool g_voltagePinConnnected = false;

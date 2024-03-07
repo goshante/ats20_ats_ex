@@ -4,6 +4,9 @@
 //and everything related to RDS will be excluded from build
 #define USE_RDS 1
 
+#define EEPROM_DATA_START_ADDRESS	0
+#define EEPROM_VERSION_ADDRESS      1000
+
 //EEPROM Settings
 #define STORE_TIME 10000 // Inactive time to save our settings
 
