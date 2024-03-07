@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.08 (07.03.2024)
+**Latest version:** v1.09 (07.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.08/ATS_EX_v1.08.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.09/ATS_EX_v1.09.hex)
 
 
 <p align="center">
@@ -61,7 +61,7 @@ Alternatively, you can compile the firmware yourself from the sources that are i
  1. **Band selection**: Short press to enter band selection mode. Select the band using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **BAND+** again. Or hold **BAND+** to quickly scroll through bands forward.
  2. **Settings page switch**: This button switches **settings pages** while settings are open.
 #### **BAND-** Button
- 1. **Settings menu**: Short press to open/close **settings menu**.
+ 1. **Settings menu**: Short press to open/close **settings menu**. When **closing** settings menu all settings are **saved to EEEPROM**.
  2. **Band selection**: Long press **BAND-** to quickly scroll through bands backward.
 #### **VOL+** Button
  1. **Volume adjustment**: Short press to enter **volume adjustment** mode. Set the volume using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **VOL+** again.

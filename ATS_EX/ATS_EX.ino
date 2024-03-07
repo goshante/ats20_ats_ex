@@ -94,7 +94,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("  ATS_EX v1.08", 0, 2);
+        oledPrint("  ATS_EX v1.09", 0, 2);
         oledPrint(" Goshante 2024\0", 0, 4);
         oledPrint(" Best firmware", 0, 6);
         delay(2000);
@@ -623,6 +623,7 @@ void switchSettings()
     else
     {
         g_settingsActive = false;
+        saveAllReceiverInformation();
         showStatus();
     }
 }
@@ -679,8 +680,8 @@ void showCharge(bool forceShow)
 
     //This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
     //Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
-    const uint16_t chargeFull = 651;    //2.1v
-    const uint16_t chargeLow = 558;     //1.8v
+    const uint16_t chargeFull = 651;    //2.10v of battery with 3.30v reference
+    const uint16_t chargeLow = 558;     //1.80v of battery with 3.30v reference
     static uint32_t lastChargeShow = 0;
     static uint16_t averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
 
