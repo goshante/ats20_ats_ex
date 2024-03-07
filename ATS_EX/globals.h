@@ -1,6 +1,6 @@
 #pragma once
 
-const uint8_t g_app_id = 51;
+const uint8_t g_app_id = 52;
 const int g_eeprom_address = 0;
 long g_storeTime = millis();
 
@@ -65,7 +65,7 @@ void doSWUnits(int8_t v = 0);
 void doSSBSoftMuteMode(int8_t v = 0);
 void doCutoffFilter(int8_t v);
 void doCPUSpeed(int8_t v = 0);
-//void doRDSErrorLevel(int8_t v);
+void doRDSErrorLevel(int8_t v);
 
 SettingsItem g_Settings[] =
 {
@@ -80,7 +80,7 @@ SettingsItem g_Settings[] =
     { "SSM", 1,  SettingType::Switch,       doSSBSoftMuteMode },  //SSB Soft Mute Mode
     { "COF", 0,  SettingType::SwitchAuto,   doCutoffFilter    },  //SSB Cutoff Filter
     { "CPU", 0,  SettingType::Switch,       doCPUSpeed        },  //CPU Frequency
-    //{ "RDS", 1,  SettingType::Num,        doRDSErrorLevel   },  //RDS ErrorLevel
+    { "RDS", 1,  SettingType::Num,          doRDSErrorLevel   },  //RDS ErrorLevel
 };
 
 enum SettingsIndex
@@ -96,7 +96,7 @@ enum SettingsIndex
     SSM,
     CutoffFilter,
     CPUSpeed,
-    //RDSError,
+    RDSError,
     SETTINGS_MAX
 };
 
@@ -220,7 +220,7 @@ char* bandTags[] =
 
 Band g_bandList[] =
 {
-    { LW_BAND_TYPE, 153, 520, 300, 0, 4 },
+    { LW_BAND_TYPE, LW_LIMIT_LOW, 520, 300, 0, 4 },
     { MW_BAND_TYPE, 520, 1710, 1476, 3, 4 },
     { SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4 },     // 160 Meter
     { SW_BAND_TYPE, 3500, 4500, 3700, 0, 5 },     // 80 Meter
