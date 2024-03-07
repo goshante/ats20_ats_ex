@@ -81,7 +81,7 @@ void setup()
     if (!(PINC & (1 << (ENCODER_BUTTON - 14))))
     {
         saveAllReceiverInformation();
-        EEPROM.write(g_eeprom_address, g_app_id);
+        EEPROM.write(g_eeprom_address, g_AppID);
         
         oled.print("  EEPROM RESET");
         oled.setCursor(0, 2);
@@ -111,7 +111,7 @@ void setup()
     delay(500);
 
     //Load settings from EEPROM
-    if (EEPROM.read(g_eeprom_address) == g_app_id)
+    if (EEPROM.read(g_eeprom_address) == g_AppID)
         readAllReceiverInformation();
     else
         saveAllReceiverInformation();
@@ -248,7 +248,7 @@ void updateSSBCutoffFilter()
 void saveAllReceiverInformation()
 {
     uint8_t addr_offset;
-    EEPROM.update(g_eeprom_address, g_app_id);
+    EEPROM.update(g_eeprom_address, g_AppID);
     EEPROM.update(g_eeprom_address + 1, g_muteVolume > 0 ? g_muteVolume : g_si4735.getVolume());
     EEPROM.update(g_eeprom_address + 2, g_bandIndex);
     EEPROM.update(g_eeprom_address + 3, g_currentMode);
