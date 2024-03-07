@@ -29,7 +29,7 @@ void applyBandConfiguration(bool extraSSBReset = false);
 
 bool isSSB()
 {
-    return g_currentMode == LSB || g_currentMode == USB || g_currentMode == CW;
+    return g_currentMode > AM && g_currentMode < FM;
 }
 
 int getSteps()
@@ -64,7 +64,7 @@ int getLastStep()
 void setup()
 {
     //We need to save more space with this
-    DDRB |= (1 << DDB5);   //13 pin
+    DDRB |=  (1 << DDB5);   //13 pin
     DDRD &= ~(1 << ENCODER_PIN_A);
     PORTD |= (1 << ENCODER_PIN_A);
     DDRD &= ~(1 << ENCODER_PIN_B);
@@ -94,7 +94,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("  ATS_EX v1.06", 0, 2);
+        oledPrint("  ATS_EX v1.08", 0, 2);
         oledPrint(" Goshante 2024\0", 0, 4);
         oledPrint(" Best firmware", 0, 6);
         delay(2000);
@@ -193,9 +193,6 @@ uint8_t agcEvent(uint8_t event, uint8_t pin)
 
 uint8_t bandEvent(uint8_t event, uint8_t pin)
 {
-#ifdef DEBUG
-    buttonEvent(event, pin);
-#endif
 #if (0 != BAND_DELAY)
     static uint8_t count;
     if (BUTTONEVENT_ISLONGPRESS(event) && !g_settingsActive)
@@ -234,7 +231,7 @@ void rotaryEncoder()
 {
     uint8_t encoderStatus = g_encoder.process();
     if (encoderStatus)
-        g_encoderCount = encoderStatus == DIR_CW ? 1 : -1;
+        g_encoderCount = (encoderStatus == DIR_CW) ? 1 : -1;
 }
 
 //Saves more flash image size
@@ -690,7 +687,6 @@ void showCharge(bool forceShow)
     if ((millis() - lastChargeShow) > 10000 || lastChargeShow == 0 || forceShow)
     {
         char buf[4];
-        buf[0] = 0;
         buf[3] = 0;
         int16_t percents = (((averageVoltageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
         bool isUsbCable = percents > 120;
@@ -704,11 +700,7 @@ void showCharge(bool forceShow)
         if (!isUsbCable)
             convertToChar(buf, percents, ilen(percents));
         else
-        {
-            buf[0] = '.';
-            buf[1] = '.';
-            buf[2] = '.';
-        }
+            buf[0] = '\0';
 
         if (ilen(percents) < 3)
             buf[2] = '%';
@@ -953,6 +945,11 @@ void loadSSBPatch()
     g_stepIndex = 0;
 }
 
+void setRDSConfig(uint8_t bias)
+{
+    g_si4735.setRdsConfig(1, bias, bias, bias, bias);
+}
+
 //Update receiver settings after changing band and modulation
 void applyBandConfiguration(bool extraSSBReset = false)
 {
@@ -967,9 +964,7 @@ void applyBandConfiguration(bool extraSSBReset = false)
         g_si4735.setSeekFmLimits(g_bandList[g_bandIndex].minimumFreq, g_bandList[g_bandIndex].maximumFreq);
         g_si4735.setSeekFmSpacing(1);
         g_ssbLoaded = false;
-        //Not enough space to implement RDS Error level switch
-        //g_si4735.setRdsConfig(1, g_Settings[SettingsIndex::RDSError].param, g_Settings[SettingsIndex::RDSError].param, g_Settings[SettingsIndex::RDSError].param, g_Settings[SettingsIndex::RDSError].param);
-        g_si4735.setRdsConfig(1, 1, 1, 1, 1);
+        setRDSConfig(g_Settings[SettingsIndex::RDSError].param);
         g_si4735.setFifoCount(1);
         g_bwIndexFM = g_bandList[g_bandIndex].bandwidthIdx;
         g_si4735.setFmBandwidth(g_bandwidthFM[g_bwIndexFM].idx);
@@ -1017,14 +1012,7 @@ void applyBandConfiguration(bool extraSSBReset = false)
         else
         {
             g_currentMode = AM;
-
-            //Clamp LW limit after SSB
-            if (g_bandList[0].minimumFreq < LW_LIMIT_LOW_SSB || g_currentFrequency < g_bandList[0].minimumFreq)
-            {
-                g_bandList[g_bandIndex].currentFreq = g_bandList[0].minimumFreq;
-                g_currentFrequency = g_bandList[0].minimumFreq;
-            }
-
+            g_bandList[g_bandIndex].currentFreq = (g_bandList[g_bandIndex].currentFreq < LW_LIMIT_LOW) ? LW_LIMIT_LOW : g_bandList[g_bandIndex].currentFreq;
             g_si4735.setAM(minFreq,
                 maxFreq,
                 g_bandList[g_bandIndex].currentFreq,
@@ -1247,14 +1235,13 @@ void doCPUSpeed(int8_t v = 0)
 }
 
 //Settings: RDS Error Level
-//Not enough flash space to implement this feature
-//void doRDSErrorLevel(int8_t v)
-//{
-//    doSwitchLogic(g_Settings[SettingsIndex::RDSError].param, 0, 1, v);
-//
-//    if (g_currentMode == FM)
-//        g_si4735.setRdsConfig(1, g_Settings[SettingsIndex::RDSError].param, g_Settings[SettingsIndex::RDSError].param, g_Settings[SettingsIndex::RDSError].param, g_Settings[SettingsIndex::RDSError].param);
-//}
+void doRDSErrorLevel(int8_t v)
+{
+    doSwitchLogic(g_Settings[SettingsIndex::RDSError].param, 0, 3, v);
+
+    if (g_currentMode == FM)
+        setRDSConfig(g_Settings[SettingsIndex::RDSError].param);
+}
 
 void doRDS()
 {
@@ -1345,13 +1332,13 @@ bool clampSSBBand()
     //Special SSB limit for LW
     if (freq <= LW_LIMIT_LOW_SSB)
     {
-        g_currentFrequency = g_bandList[0].minimumFreq;
-        g_bandList[0].currentFreq = g_bandList[0].minimumFreq;
-        g_si4735.setFrequency(g_bandList[g_bandIndex].minimumFreq);
+        g_currentFrequency = LW_LIMIT_LOW;
+        g_bandList[0].currentFreq = LW_LIMIT_LOW;
+        g_si4735.setFrequency(LW_LIMIT_LOW);
         bfoReset();
         return false;
     }
-    else if (freq < g_bandList[0].minimumFreq)
+    else if (freq < LW_LIMIT_LOW)
         return false;
 
     if (freq > g_bandList[g_bandIndex].maximumFreq)

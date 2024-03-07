@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.06 (06.03.2024)
+**Latest version:** v1.08 (07.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.06/ATS_EX_v1.06.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.08/ATS_EX_v1.08.hex)
 
 
 <p align="center">
@@ -39,10 +39,15 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **Atm328p controller is now running on it's full clock**. Controls have to be more responsive. (Don't know how it impacts on battery drain.)
  - Code refactoring, optimizations
  - Fixed some bugs
- # How to flash it on my receiver?
- You can use anything that is able to flash .hex firmware to Arduino. You only need Micro USB cable and **USB UART** driver (It probably will be driver for **CH341**). I recommend you to use **AVRDUDESS** if you use Windows. It's easy GUI tool that can dump and flash images to Atmel microcontrollers. Just select **"Arduino Nano (ATmega328P)"** from **Presets**, select your actual **COM Port** and **path to firmware** .hex file. Select **"Write"** in **Flash** section and press **Go**. 
 
-Or you can build it yourself. I use Visual Studio 2022 with VSMicro extension that using Arduino IDE 1.8. You can use just Arduino IDE, build it yourself and upload from IDE.
+ # How to flash it on my receiver?
+You can use any software capable of flashing a .hex firmware file to Arduino. You will only need a Micro USB cable and a **USB UART driver** (most likely, it will be the driver for the **CH341** controller). I recommend using **AVRDUDESS** if you are on Windows. It's a simple tool with a GUI that can dump and flash firmware files onto Atmel microcontrollers (Arduino). 
+
+**There are two types of ATS-20 receivers**: Those on **Arduino Nano** and those on **Arduino Uno**. They are quite easy to distinguish. You need to disassemble and look. The ones on Nano have the Arduino soldered as a separate board onto the main board. If inside there isn't a soldered board and the ATMega368 chip is directly soldered with all components on one board, then you have the Uno revision. This is important before flashing. 
+
+You need to select from the **Presets** section either **"Arduino Nano (ATmega328P)"** or **"Arduino Uno (ATmega328P)"**, then select your actual **COM port** and in the **"Flash"** section specify **the path to the .hex firmware file**. Choose the **Write** mode and press the **Go** button next to it. After this, the flashing will start.
+
+Alternatively, you can compile the firmware yourself from the sources that are in this repository. I use Visual Studio 2022 with the VSMicro extension, which uses Arduino IDE 1.8. You can simply use Arduino IDE, compile the sketch yourself, and upload it to the controller directly from the IDE.
 
 # User manual
 **ATTENTION:** After flashing it's strongly **recommended to reset EEPROM memory**. To do this just hold the **Encoder Button** while turning receiver on.
@@ -106,6 +111,8 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 **COF** : **SSB Cutoff Filter**. It has 3 modes: **On** - Band pass filter to cutoff both the unwanted side band and high frequency components. **Off** - Low pass filter to cutoff the unwanted side band. And **AUT** mode: Automatically turns on and off, depending on **Bandwidth** (Off when bandwidth is higher than **2.0 KHz**).
 
 **CPU** : **CPU Frequency**. This is useful for **battery saving** purposes. It can be only **100** or **50%**. 100% - CPU works on x1 of own frequency, using it's full potential. 50% - CPU works on half of it's own frequency, it's slower, but allowing you to save more battery.
+
+**RDS** : **RDS Decoding error threshold** level. The lower this number, the better the RDS text appears, but the lower the chances for successful sync. The higher this value, the easier it is to decode the RDS stream, but it could look messed up frequently. This is number from **0** to **3**.
 
 ### Display elements description
 

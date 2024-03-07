@@ -35,7 +35,8 @@
 // Band settings
 #define SW_LIMIT_LOW		1700
 #define SW_LIMIT_HIGH		30000
-#define LW_LIMIT_LOW_SSB	(g_bandList[0].minimumFreq - 16)
+#define LW_LIMIT_LOW		153
+#define LW_LIMIT_LOW_SSB	(LW_LIMIT_LOW - 16)
 
 #define BAND_DELAY                 2
 #define VOLUME_DELAY               1 
