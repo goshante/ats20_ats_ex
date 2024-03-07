@@ -720,6 +720,7 @@ void showCharge(bool forceShow)
     }  
 }
 
+#if USE_RDS
 void showRDS()
 {
     static uint16_t lastUpdatedFreq = 0;
@@ -788,6 +789,7 @@ void showRDS()
     g_rdsPrevLen = len;
     g_rdsSwitchPressed = false;
 }
+#endif
 
 //Draw steps (with units)
 void showStep()
@@ -915,11 +917,13 @@ void bandSwitch(bool up)
         oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
     }
 
+#if USE_RDS
     if (g_displayRDS && g_currentMode != FM)
     {
         g_displayRDS = false;
         oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
     }
+#endif
 
     g_currentBFO = 0;
     if (isSSB())
@@ -945,10 +949,12 @@ void loadSSBPatch()
     g_stepIndex = 0;
 }
 
+#if USE_RDS
 void setRDSConfig(uint8_t bias)
 {
     g_si4735.setRdsConfig(1, bias, bias, bias, bias);
 }
+#endif
 
 //Update receiver settings after changing band and modulation
 void applyBandConfiguration(bool extraSSBReset = false)
@@ -964,7 +970,9 @@ void applyBandConfiguration(bool extraSSBReset = false)
         g_si4735.setSeekFmLimits(g_bandList[g_bandIndex].minimumFreq, g_bandList[g_bandIndex].maximumFreq);
         g_si4735.setSeekFmSpacing(1);
         g_ssbLoaded = false;
+#if USE_RDS
         setRDSConfig(g_Settings[SettingsIndex::RDSError].param);
+#endif
         g_si4735.setFifoCount(1);
         g_bwIndexFM = g_bandList[g_bandIndex].bandwidthIdx;
         g_si4735.setFmBandwidth(g_bandwidthFM[g_bwIndexFM].idx);
@@ -1234,6 +1242,7 @@ void doCPUSpeed(int8_t v = 0)
     interrupts();
 }
 
+#if USE_RDS
 //Settings: RDS Error Level
 void doRDSErrorLevel(int8_t v)
 {
@@ -1257,6 +1266,7 @@ void doRDS()
     else
         updateLowerDisplayLine();
 }
+#endif
 
 //Prevents repeatable code for flash image size saving
 void doBandwidthLogic(int8_t& bwIndex, uint8_t upperLimit, uint8_t v)
@@ -1392,7 +1402,9 @@ void loop()
     
     if (millis() - g_lastFreqChange >= 1000)
     {
+#if USE_RDS
         showRDS();
+#endif
 
         if (g_sMeterOn && !g_settingsActive)
             showSMeter();
@@ -1502,8 +1514,10 @@ void loop()
             if (g_currentMode == FM)
             {
                 g_currentFrequency += g_tabStepFM[g_FMStepIndex] * g_encoderCount; //g_si4735.getFrequency() is too slow
+#if USE_RDS
                 if (g_displayRDS)
                     oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
+#endif
             }
             else
                 g_currentFrequency += g_tabStep[g_stepIndex] * g_encoderCount;
@@ -1643,8 +1657,10 @@ void loop()
         //Seek in SSB/CW is not allowed
         else if (g_currentMode == FM || g_currentMode == AM)
         {
+#if USE_RDS
             if (g_displayRDS)
                 oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
+#endif
 
             if (g_seekDirection)
                 g_si4735.frequencyUp();
@@ -1759,8 +1775,10 @@ void loop()
                 g_bandList[g_bandIndex].currentStepIdx = g_stepIndex;
                 applyBandConfiguration();
             }
+#if USE_RDS
             else
                 doRDS();
+#endif
         }
     }
 

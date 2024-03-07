@@ -65,7 +65,9 @@ void doSWUnits(int8_t v = 0);
 void doSSBSoftMuteMode(int8_t v = 0);
 void doCutoffFilter(int8_t v);
 void doCPUSpeed(int8_t v = 0);
+#if USE_RDS
 void doRDSErrorLevel(int8_t v);
+#endif
 
 SettingsItem g_Settings[] =
 {
@@ -80,7 +82,9 @@ SettingsItem g_Settings[] =
     { "SSM", 1,  SettingType::Switch,       doSSBSoftMuteMode },  //SSB Soft Mute Mode
     { "COF", 0,  SettingType::SwitchAuto,   doCutoffFilter    },  //SSB Cutoff Filter
     { "CPU", 0,  SettingType::Switch,       doCPUSpeed        },  //CPU Frequency
+#if USE_RDS
     { "RDS", 1,  SettingType::Num,          doRDSErrorLevel   },  //RDS ErrorLevel
+#endif
 };
 
 enum SettingsIndex
@@ -96,7 +100,9 @@ enum SettingsIndex
     SSM,
     CutoffFilter,
     CPUSpeed,
+#if USE_RDS
     RDSError,
+#endif
     SETTINGS_MAX
 };
 
@@ -197,6 +203,7 @@ struct Band
     int8_t bandwidthIdx;     // Bandwidth table index (internal table in Si473x controller)
 };
 
+#if USE_RDS
 enum RDSActiveInfo : uint8_t
 {
     StationName,
@@ -206,6 +213,7 @@ enum RDSActiveInfo : uint8_t
 uint8_t g_rdsActiveInfo = RDSActiveInfo::StationName;
 char g_rdsPrevLen = 0;
 char* g_RDSCells[3];
+#endif
 
 char _literal_SW[3] = "SW"; //To reduce binary image size
 char _literal_EmptyLine[17] = "                ";
