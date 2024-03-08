@@ -95,8 +95,8 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("  ATS_EX v1.09", 0, 2);
-        oledPrint(" Goshante 2024\0", 0, 4);
+        oledPrint(" ATS_EX v1.10", 8, 2);
+        oledPrint(" Goshante 2024", 0, 4);
         oledPrint(" Best firmware", 0, 6);
         delay(2000);
     }
@@ -239,7 +239,7 @@ void rotaryEncoder()
 void updateSSBCutoffFilter()
 {
     // Auto mode: If SSB bandwidth 2 KHz or lower - it's better to enable cutoff filter
-    if (g_Settings[SettingsIndex::CutoffFilter].param == 0)
+    if (g_Settings[SettingsIndex::CutoffFilter].param == 0 || g_currentMode == CW)
         g_si4735.setSSBSidebandCutoffFilter((g_bandwidthSSB[g_bwIndexSSB].idx == 0 || g_bandwidthSSB[g_bwIndexSSB].idx == 4 || g_bandwidthSSB[g_bwIndexSSB].idx == 5) ? 0 : 1);
     else
         g_si4735.setSSBSidebandCutoffFilter(g_Settings[SettingsIndex::CutoffFilter].param - 1);
@@ -682,45 +682,41 @@ void showCharge(bool forceShow)
     const uint16_t chargeFull = 651;    //2.10v of battery with 3.30v reference
     const uint16_t chargeLow = 558;     //1.80v of battery with 3.30v reference
     static uint32_t lastChargeShow = 0;
-    static uint16_t averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
-    static uint16_t lastPercents = 0;
-    if ((millis() - lastChargeShow) > 10000 || lastChargeShow == 0 || forceShow)
+    static uint16_t averageSamples = 0;  //let it be super high value to make this logic work
+
+    int sample = analogRead(BATTERY_VOLTAGE_PIN);
+    if ((millis() - lastChargeShow) > 3000 || lastChargeShow == 0 || forceShow)
     {
         char buf[4];
         buf[3] = 0;
-        int16_t percents = (((averageVoltageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
-        bool isUsbCable = percents > 120;
+        int16_t percents = (((averageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
 
-        if (percents >= 100)
+        if (percents > 100)
             percents = 100;
-
         else if (percents < 0)
             percents = 0;
-
-        if (isUsbCable) //Show always last charge after connecting USB
-            percents = lastPercents;
-        else
-            lastPercents = percents;
 
         convertToChar(buf, percents, ilen(percents));
 
         if (ilen(percents) < 3)
             buf[2] = '%';
 
-
         if (!g_settingsActive && !g_sMeterOn && !g_displayRDS)
             oledPrint(buf, 102, 6, DEFAULT_FONT);
         lastChargeShow = millis();
-        averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
+        averageSamples = sample;
     }
-    else
+
+    if (averageSamples == 0)
     {
-        int sample = analogRead(BATTERY_VOLTAGE_PIN);
-        if (averageVoltageSamples > 0)
-            averageVoltageSamples = (averageVoltageSamples + analogRead(BATTERY_VOLTAGE_PIN)) / 2;
-        else
-            averageVoltageSamples = analogRead(BATTERY_VOLTAGE_PIN);
-    }  
+        averageSamples = sample;
+        return;
+    }
+    
+    if (abs(averageSamples - sample) > 2)
+        return;
+
+    averageSamples = (averageSamples + sample) / 2;
 }
 
 #if USE_RDS
