@@ -60,7 +60,7 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
-#define APP_VERSION 110
+#define APP_VERSION 111
 
 //Initialize controller
 void setup()
@@ -95,9 +95,9 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint(" ATS_EX v1.10", 8, 2);
-        oledPrint(" Goshante 2024", 0, 4);
-        oledPrint(" Best firmware", 0, 6);
+        oledPrint("ATS_EX v1.11", 16, 2);
+        oledPrint("Goshante 2024", 12, 4);
+        oledPrint("Best firmware", 12, 6);
         delay(2000);
     }
     oled.clear();
@@ -595,10 +595,7 @@ void showSettingsTitle()
 
 void switchSettingsPage()
 {
-    g_SettingsPage++;
-    if (g_SettingsPage > g_SettingsMaxPages)
-        g_SettingsPage = 1;
-
+    g_SettingsPage = (++g_SettingsPage > g_SettingsMaxPages) ? 1 : g_SettingsMaxPages;
     g_SettingSelected = 6 * (g_SettingsPage - 1);
     g_SettingEditing = false;
     oled.clear();
@@ -679,42 +676,41 @@ void showCharge(bool forceShow)
 
     //This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
     //Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
+   
     const uint16_t chargeFull = 651;    //2.10v of battery with 3.30v reference
     const uint16_t chargeLow = 558;     //1.80v of battery with 3.30v reference
     static uint32_t lastChargeShow = 0;
-    static uint16_t averageSamples = 0;  //let it be super high value to make this logic work
+    static int16_t averageSamples = 0;
 
     int sample = analogRead(BATTERY_VOLTAGE_PIN);
-    if ((millis() - lastChargeShow) > 3000 || lastChargeShow == 0 || forceShow)
+    if (sample < 0)
+        sample = averageSamples;
+    sample = (sample > chargeFull) ? chargeFull : sample;
+
+    if ((millis() - lastChargeShow) > 10000 || forceShow)
     {
         char buf[4];
         buf[3] = 0;
         int16_t percents = (((averageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
 
-        if (percents > 100)
-            percents = 100;
-        else if (percents < 0)
-            percents = 0;
+        uint8_t il = ilen(percents) < 3 ? 2 : 3;
+        convertToChar(buf, percents, il);
 
-        convertToChar(buf, percents, ilen(percents));
-
-        if (ilen(percents) < 3)
+        if (il < 3)
             buf[2] = '%';
+
+        if (averageSamples < (chargeLow - 20))
+        {
+            buf[0] = '-';
+            buf[1] = '-';
+            buf[2] = '-';
+        }
 
         if (!g_settingsActive && !g_sMeterOn && !g_displayRDS)
             oledPrint(buf, 102, 6, DEFAULT_FONT);
         lastChargeShow = millis();
         averageSamples = sample;
     }
-
-    if (averageSamples == 0)
-    {
-        averageSamples = sample;
-        return;
-    }
-    
-    if (abs(averageSamples - sample) > 2)
-        return;
 
     averageSamples = (averageSamples + sample) / 2;
 }
