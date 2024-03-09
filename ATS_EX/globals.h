@@ -247,8 +247,8 @@ Band g_bandList[] =
     { SW_BAND_TYPE, 24890, 26200, 24940, 0, 4 },  // 12 Meter
     { SW_BAND_TYPE, 26200, 28000, 27500, 0, 4 },  // CB Band (11 Meter)
     { SW_BAND_TYPE, 28000, SW_LIMIT_HIGH, 28400, 0, 4 },  // 10 Meter
-    { FM_BAND_TYPE, 6400, 10800, 7000, 1, 0 },
-    { FM_BAND_TYPE, 8400, 10800, 10570, 1, 0 },
+    { FM_BAND_TYPE, 6400, 10800, 8400, 1, 0 },
+    //{ FM_BAND_TYPE, 8400, 10800, 10570, 1, 0 },
 };
 
 const uint8_t g_lastBand = (sizeof(g_bandList) / sizeof(Band)) - 1;

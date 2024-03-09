@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.10 (09.03.2024)
+**Latest version:** v1.11 (09.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.10/ATS_EX_v1.10.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.11/ATS_EX_v1.11.hex)
 
 
 <p align="center">
@@ -23,7 +23,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **LW** Band: From **153** (or **138** in SSB mode) KHz to **520** KHz 
  - **MW** Band: From **520** to **1710** KHz
  - **SW** Band: From **1700** to **30000** KHz (With a lot of sub-bands)
- - **FM** Band: From **64** to **108** MHz. (Two sub-bands from **64** and from **84** MHz)
+ - **FM** Band: From **64** to **108** MHz.
  - **Dynamic RDS** for **FM** radio stations with an option to switch RDS information lines (Displays UP to 16 characters).
  - Added **CW mode**
  - Poorly designed RSSI was removed and replaced with optionaly displayed **S-meter** like scale.
