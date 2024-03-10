@@ -126,6 +126,7 @@ Bandwidth g_bandwidthSSB[] =
     { 2, "3.0k" },
     { 3, "4.0k" }
 };
+const uint8_t g_bwSSBMaxIdx = 5;
 
 int8_t g_bwIndexAM = 4;
 const uint8_t g_maxFilterAM = 6;

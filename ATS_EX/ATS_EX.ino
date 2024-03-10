@@ -60,7 +60,7 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
-#define APP_VERSION 111
+#define APP_VERSION 112
 
 //Initialize controller
 void setup()
@@ -95,7 +95,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("ATS_EX v1.11", 16, 2);
+        oledPrint("ATS_EX v1.12", 16, 2);
         oledPrint("Goshante 2024", 12, 4);
         oledPrint("Best firmware", 12, 6);
         delay(2000);
@@ -256,7 +256,8 @@ void saveAllReceiverInformation()
     EEPROM.update(addr++, g_currentBFO >> 8);
     EEPROM.update(addr++, g_currentBFO & 0XFF);
     EEPROM.update(addr++, g_FMStepIndex);
-    EEPROM.update(addr++, g_prevMode);
+    EEPROM.update(addr++, g_prevMode); 
+    EEPROM.update(addr++, g_bwIndexSSB);
 
     g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
 
@@ -284,6 +285,7 @@ void readAllReceiverInformation()
     g_currentBFO |= EEPROM.read(addr++);
     g_FMStepIndex = EEPROM.read(addr++);
     g_prevMode = EEPROM.read(addr++);
+    g_bwIndexSSB = EEPROM.read(addr++);
 
     for (uint8_t i = 0; i <= g_lastBand; i++)
     {
@@ -310,7 +312,6 @@ void readAllReceiverInformation()
     if (isSSB())
     {
         loadSSBPatch();
-        g_bwIndexSSB = (bwIdx > 5) ? 5 : bwIdx;
         g_si4735.setSSBAudioBandwidth(g_bandwidthSSB[g_bwIndexSSB].idx);
         updateSSBCutoffFilter();
     }
@@ -1007,7 +1008,6 @@ void applyBandConfiguration(bool extraSSBReset = false)
             g_si4735.setSSBDspAfc(g_Settings[SettingsIndex::Sync].param == 1 ? 0 : 1);
             g_si4735.setSSBAvcDivider(g_Settings[SettingsIndex::Sync].param == 0 ? 0 : 3); //Set Sync mode
             g_si4735.setAmSoftMuteMaxAttenuation(g_Settings[SettingsIndex::SoftMute].param);
-            g_bwIndexSSB = g_bandList[g_bandIndex].bandwidthIdx;
             g_si4735.setSSBAudioBandwidth(g_currentMode == CW ? g_bandwidthSSB[0].idx : g_bandwidthSSB[g_bwIndexSSB].idx);
             g_si4735.setSSBBfo(g_currentBFO * -1);
             g_si4735.setSSBSoftMute(g_Settings[SettingsIndex::SSM].param);
@@ -1266,13 +1266,7 @@ void doRDS()
 //Prevents repeatable code for flash image size saving
 void doBandwidthLogic(int8_t& bwIndex, uint8_t upperLimit, uint8_t v)
 {
-    bwIndex = (v == 1) ? bwIndex + 1 : bwIndex - 1;
-
-    if (bwIndex > upperLimit)
-        bwIndex = 0;
-    else if (bwIndex < 0)
-        bwIndex = upperLimit;
-
+    doSwitchLogic(bwIndex, 0, upperLimit, v);
     g_bandList[g_bandIndex].bandwidthIdx = bwIndex;
 }
 
@@ -1281,7 +1275,7 @@ void doBandwidth(uint8_t v)
 {
     if (isSSB())
     {
-        doBandwidthLogic(g_bwIndexSSB, 5, v);
+        doSwitchLogic(g_bwIndexSSB, 0, g_bwSSBMaxIdx, v);
         g_si4735.setSSBAudioBandwidth(g_bandwidthSSB[g_bwIndexSSB].idx);
         updateSSBCutoffFilter();
     }
