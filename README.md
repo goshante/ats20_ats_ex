@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.12 (10.03.2024)
+**Latest version:** v1.13 (12.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.12/ATS_EX_v1.12.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.13/ATS_EX_v1.13.hex)
 
 
 <p align="center">
@@ -28,9 +28,10 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - Added **CW mode**
  - Poorly designed RSSI was removed and replaced with optionaly displayed **S-meter** like scale.
  - All **SW bands** now feel like one large band **from 1700 to 30000 KHz**. It's possible to switch between them, but they no longer restrict the frequency step to the sub-band limits.
- - **The tuning across frequencies has become as smooth as possible** in SSB mode, thanks to the merging of the receive frequency with the BFO. The rough frequency switching now occurs every 16 KHz (**the seamless tuning in both directions covers a full 32 Hz**). In Non-SSB modes now you also can tune faster, **encoder should be more responsive**.
+ - **The tuning across frequencies has become as smooth as possible** in SSB mode, thanks to the merging of the receive frequency with the BFO. The rough frequency switching now occurs every 16 KHz (**the seamless tuning in both directions covers a full 32 KHz**). In Non-SSB modes now you also can tune faster, **encoder should be more responsive**.
  - **A lot of steps are available for every mode**. In AM you have 1/5/9/10/50/100k/1M steps, in SSB you have 1/5/9/10k steps and 10/25/50/100/500Hz steps for more precise tuning. In FM mode you have 10k/100k/1M steps.
  - Added settings page. You can configure **Gain Control and ATT**, **Soft Mute**, **Automatic Volume Control** (AVC), On or Off **AVC for SSB mode**,  **DeEmphasis** for FM mode and enable or disable **SSB Sync** mode and other useful settings.
+ - **BFO** offset **calibration**.
  - Adjustable **screen brightness**.
  - Adjustable **CPU Frequency** for power saving purposes and reducing interference.
  - Added **Mute button** and **Display on/off button**.
@@ -61,7 +62,7 @@ Alternatively, you can compile the firmware yourself from the sources that are i
  1. **Band selection**: Short press to enter band selection mode. Select the band using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **BAND+** again. Or hold **BAND+** to quickly scroll through bands forward.
  2. **Settings page switch**: This button switches **settings pages** while settings are open.
 #### **BAND-** Button
- 1. **Settings menu**: Short press to open/close **settings menu**. When **closing** settings menu all settings are **saved to EEEPROM**.
+ 1. **Settings menu**: Short press to open/close **settings menu**. When **closing** settings menu all settings are **saved to EEPROM**.
  2. **Band selection**: Long press **BAND-** to quickly scroll through bands backward.
 #### **VOL+** Button
  1. **Volume adjustment**: Short press to enter **volume adjustment** mode. Set the volume using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **VOL+** again.
@@ -117,6 +118,8 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 **CPU** : **CPU Frequency**. This is useful for **battery saving** purposes. It can be only **100** or **50%**. 100% - CPU works on x1 of own frequency, using it's full potential. 50% - CPU works on half of it's own frequency, it's slower, but allowing you to save more battery.
 
 **RDS** : **RDS Decoding error threshold** level. The lower this number, the better the RDS text appears, but the lower the chances for successful sync. The higher this value, the easier it is to decode the RDS stream, but it could look messed up frequently. This is number from **0** to **3**.
+
+**BFO** : **BFO Offset calibration**. One unit of this parameter is **1 Hz * 10** or **0.01 KHz**. This is permanent **BFO offset for SSB**. If you think SSB frequency is not precise enough you can calibrate it. Allowed offset value is from **-60 to 60 units** or from **-0.60 KHz to 0.60 KHz**.
 
 ### Display elements description
 

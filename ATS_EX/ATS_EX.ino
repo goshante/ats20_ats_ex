@@ -60,7 +60,7 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
-#define APP_VERSION 112
+#define APP_VERSION 113
 
 //Initialize controller
 void setup()
@@ -95,7 +95,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("ATS_EX v1.12", 16, 2);
+        oledPrint("ATS_EX v1.13", 16, 2);
         oledPrint("Goshante 2024", 12, 4);
         oledPrint("Best firmware", 12, 6);
         delay(2000);
@@ -446,10 +446,11 @@ void updateLowerDisplayLine()
 //Converts settings value to UI value
 void SettingParamToUI(char* buf, uint8_t idx)
 {
+    int8_t param = g_Settings[idx].param;
     switch (g_Settings[idx].type)
     {
     case SettingType::ZeroAuto:
-        if (g_Settings[idx].param == 0)
+        if (param == 0)
         {
             buf[0] = 'A';
             buf[1] = 'U';
@@ -457,21 +458,23 @@ void SettingParamToUI(char* buf, uint8_t idx)
             buf[3] = 0x0;
         }
         else
-            convertToChar(buf, g_Settings[idx].param, 3);
+            convertToChar(buf, param, 3);
 
         break;
 
     case SettingType::Num:
-        convertToChar(buf, g_Settings[idx].param, 3);
+        convertToChar(buf, abs(param), 3);
+        if (param < 0)
+            buf[0] = '-';
         break;
 
     case SettingType::SwitchAuto:
-        if (g_Settings[idx].param == 0)
+        if (param == 0)
         {
             buf[0] = 'A';
             buf[1] = 'U';
             buf[2] = 'T';       }
-        else if (g_Settings[idx].param == 1)
+        else if (param == 1)
         {
             buf[0] = 'O';
             buf[1] = 'n';
@@ -489,7 +492,7 @@ void SettingParamToUI(char* buf, uint8_t idx)
     case SettingType::Switch:
         if (idx == SettingsIndex::DeEmp)
         {
-            if (g_Settings[idx].param == 0)
+            if (param == 0)
             {
                 buf[0] = '5';
                 buf[1] = '0';
@@ -504,7 +507,7 @@ void SettingParamToUI(char* buf, uint8_t idx)
         }
         else if (idx == SettingsIndex::SWUnits)
         {
-            if (g_Settings[idx].param == 0)
+            if (param == 0)
                 buf[0] = 'K';
             else
                 buf[0] = 'M';
@@ -513,7 +516,7 @@ void SettingParamToUI(char* buf, uint8_t idx)
         }
         else if (idx == SettingsIndex::SSM)
         {
-            if (g_Settings[idx].param == 0)
+            if (param == 0)
             {
                 buf[0] = 'R';
                 buf[1] = 'S';
@@ -528,7 +531,7 @@ void SettingParamToUI(char* buf, uint8_t idx)
         }
         else if (idx == SettingsIndex::CPUSpeed)
         {
-            if (g_Settings[idx].param == 0)
+            if (param == 0)
             {
                 buf[0] = '1';
                 buf[1] = '0';
@@ -543,7 +546,7 @@ void SettingParamToUI(char* buf, uint8_t idx)
         }
         else
         {
-            if (g_Settings[idx].param == 0)
+            if (param == 0)
             {
                 buf[0] = 'O';
                 buf[1] = 'f';
@@ -596,7 +599,8 @@ void showSettingsTitle()
 
 void switchSettingsPage()
 {
-    g_SettingsPage = (++g_SettingsPage > g_SettingsMaxPages) ? 1 : g_SettingsMaxPages;
+    g_SettingsPage++;
+    g_SettingsPage = (g_SettingsPage > g_SettingsMaxPages) ? 1 : g_SettingsPage;
     g_SettingSelected = 6 * (g_SettingsPage - 1);
     g_SettingEditing = false;
     oled.clear();
@@ -923,7 +927,7 @@ void bandSwitch(bool up)
 
     g_currentBFO = 0;
     if (isSSB())
-        g_si4735.setSSBBfo(0);
+        updateBFO();
     applyBandConfiguration();
 }
 
@@ -1009,7 +1013,7 @@ void applyBandConfiguration(bool extraSSBReset = false)
             g_si4735.setSSBAvcDivider(g_Settings[SettingsIndex::Sync].param == 0 ? 0 : 3); //Set Sync mode
             g_si4735.setAmSoftMuteMaxAttenuation(g_Settings[SettingsIndex::SoftMute].param);
             g_si4735.setSSBAudioBandwidth(g_currentMode == CW ? g_bandwidthSSB[0].idx : g_bandwidthSSB[g_bwIndexSSB].idx);
-            g_si4735.setSSBBfo(g_currentBFO * -1);
+            updateBFO();
             g_si4735.setSSBSoftMute(g_Settings[SettingsIndex::SSM].param);
         }
         else
@@ -1092,6 +1096,12 @@ void doStep(int8_t v)
         }
         showStep();
     }
+}
+
+void updateBFO()
+{
+    //Actually to move frequency forward you need to move BFO backwards, so just * -1
+    g_si4735.setSSBBfo((g_currentBFO + (g_Settings[SettingsIndex::BFO].param * 10)) * -1);
 }
 
 //Volume control
@@ -1247,6 +1257,18 @@ void doRDSErrorLevel(int8_t v)
         setRDSConfig(g_Settings[SettingsIndex::RDSError].param);
 }
 
+//Settings: BFO Offset calibration
+void doBFOCalibration(int8_t v)
+{
+    doSwitchLogic(g_Settings[SettingsIndex::BFO].param, -60, 60, v);
+
+    if (isSSB())
+    {
+        setRDSConfig(g_Settings[SettingsIndex::BFO].param);
+        updateBFO();
+    }
+}
+
 void doRDS()
 {
     g_displayRDS = !g_displayRDS;
@@ -1323,7 +1345,7 @@ bool clampSSBBand()
     auto bfoReset = [&]()
     {
         g_currentBFO = 0;
-        g_si4735.setSSBBfo(0);
+        updateBFO();
         showFrequency(true);
         showModulation();
     };
@@ -1471,8 +1493,8 @@ void loop()
             }
 
             g_currentBFO = newBFO;
+            updateBFO();
 
-            g_si4735.setSSBBfo(g_currentBFO * -1); //Actually to move frequency forward you need to move BFO backwards
             if (redundant != 0)
             {
                 g_si4735.setFrequency(g_currentFrequency);
