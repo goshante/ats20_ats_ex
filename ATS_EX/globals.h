@@ -66,15 +66,18 @@ void doCPUSpeed(int8_t v = 0);
 #if USE_RDS
 void doRDSErrorLevel(int8_t v);
 #endif
+void doBFOCalibration(int8_t v);
 
 SettingsItem g_Settings[] =
 {
+    //Page 1
     { "ATT", 0,  SettingType::ZeroAuto,     doAttenuation     },  //Attenuation
     { "SM ", 0,  SettingType::Num,          doSoftMute        },  //Soft Mute
     { "SVC", 1,  SettingType::Switch,       doSSBAVC          },  //SSB AVC Switch
     { "Syn", 0,  SettingType::Switch,       doSync            },  //SSB Sync
     { "DeE", 1,  SettingType::Switch,       doDeEmp           },  //FM DeEmphasis (0 - 50, 1 - 75)
     { "AVC", 46, SettingType::Num,          doAvc             },  //Automatic Volume Control
+    //Page 2
     { "Scr", 80, SettingType::Num,          doBrightness      },  //Screen Brightness
     { "SW ", 0,  SettingType::Switch,       doSWUnits         },  //SW Units
     { "SSM", 1,  SettingType::Switch,       doSSBSoftMuteMode },  //SSB Soft Mute Mode
@@ -83,6 +86,8 @@ SettingsItem g_Settings[] =
 #if USE_RDS
     { "RDS", 1,  SettingType::Num,          doRDSErrorLevel   },  //RDS ErrorLevel
 #endif
+    //Page 3
+    { "BFO", 0,  SettingType::Num,          doBFOCalibration  },  //BFO Offset calibration
 };
 
 enum SettingsIndex
@@ -101,10 +106,11 @@ enum SettingsIndex
 #if USE_RDS
     RDSError,
 #endif
+    BFO,
     SETTINGS_MAX
 };
 
-const uint8_t g_SettingsMaxPages = 2;
+const uint8_t g_SettingsMaxPages = 3;
 int8_t g_SettingSelected = 0;
 int8_t g_SettingsPage = 1;
 bool g_SettingEditing = false;
@@ -214,7 +220,6 @@ char g_rdsPrevLen = 0;
 char* g_RDSCells[3];
 #endif
 
-char _literal_SW[3] = "SW"; //To reduce binary image size
 char _literal_EmptyLine[17] = "                ";
 
 char* bandTags[] =
