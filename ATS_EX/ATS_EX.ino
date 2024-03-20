@@ -1261,7 +1261,7 @@ void doRDSErrorLevel(int8_t v)
 // Settings: BFO Offset calibration
 void doBFOCalibration(int8_t v)
 {
-    doSwitchLogic(g_Settings[SettingsIndex::BFO].param, -60, 60, v);
+    doSwitchLogic(g_Settings[SettingsIndex::BFO].param, -99, 100, v);
 
     if (isSSB())
     {
