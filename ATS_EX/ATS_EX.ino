@@ -109,6 +109,7 @@ void setup()
 
     g_si4735.getDeviceI2CAddress(RESET_PIN);
     g_si4735.setup(RESET_PIN, MW_BAND_TYPE);
+    g_si4735.setAudioMuteMcuPin(AUDIO_MUTE);
 
     delay(500);
 
