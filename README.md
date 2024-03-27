@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.13 (12.03.2024)
+**Latest version:** v1.14 (27.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.13/ATS_EX_v1.13.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.14/ATS_EX_v1.14.hex)
 
 
 <p align="center">
@@ -20,12 +20,13 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - Fully **reworked interface**. No more ugly stretched fonts. Minimalistic readable interface. 7-Segment frequency font is inspired by swling firmware, but created by me.
  - Fully **reworked controls**. You can read user manual below.
  - **BFO is now part of main frequency** and regulated by frequency step, it is no more dedicated option that makes frequency surfing experience terrible. SSB mode has more precise steps.
- - **LW** Band: From **153** (or **138** in SSB mode) KHz to **520** KHz 
+ - **LW** Band: From **153** KHz to **520** KHz 
  - **MW** Band: From **520** to **1710** KHz
  - **SW** Band: From **1700** to **30000** KHz (With a lot of sub-bands)
  - **FM** Band: From **64** to **108** MHz.
  - **Dynamic RDS** for **FM** radio stations with an option to switch RDS information lines (Displays UP to 16 characters).
- - Added **CW mode**
+ - AM/FM **Stations scan**.
+ - Added **CW mode**.
  - Poorly designed RSSI was removed and replaced with optionaly displayed **S-meter** like scale.
  - All **SW bands** now feel like one large band **from 1700 to 30000 KHz**. It's possible to switch between them, but they no longer restrict the frequency step to the sub-band limits.
  - **The tuning across frequencies has become as smooth as possible** in SSB mode, thanks to the merging of the receive frequency with the BFO. The rough frequency switching now occurs every 16 KHz (**the seamless tuning in both directions covers a full 32 KHz**). In Non-SSB modes now you also can tune faster, **encoder should be more responsive**.
@@ -59,7 +60,7 @@ Alternatively, you can compile the firmware yourself from the sources that are i
 
 ### Button functionality
 #### **BAND+** Button
- 1. **Band selection**: Short press to enter band selection mode. Select the band using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **BAND+** again. Or hold **BAND+** to quickly scroll through bands forward.
+ 1. **Band selection**: Short press to enter band selection mode. Select the band using **Encoder Rotation** and confirm with the **Encoder Button** or by pressing **BAND+** again. Or hold **BAND+** to quickly scroll through bands forward. In **SW mode** switches to the nearest **SW subband**. After latest SW subband switches to the next (or prev) band.
  2. **Settings page switch**: This button switches **settings pages** while settings are open.
 #### **BAND-** Button
  1. **Settings menu**: Short press to open/close **settings menu**. When **closing** settings menu all settings are **saved to EEPROM**.
@@ -85,10 +86,10 @@ Alternatively, you can compile the firmware yourself from the sources that are i
 1. **Frequency Tuning**: In radio mode (normal mode), rotation adjusts the frequency by the step indicated at the bottom of the screen.
 2. **Settings navigation**: In settings mode, the encoder allows you to select the necessary setting and, after selecting, change its value.
 #### **Encoder Button**
-1. **Frequency scan**: Works **only in FM and AM** modulations. Press to scan stations by frequency in the last direction with the given step.
+1. **Frequency scan**: Works **only in FM and AM** modulations and only if option **Sca** is **On** in settings. Press to scan stations by frequency in the last direction with the given step. Rotate encoder or press encoder button to **stop scanning**.
 2. **Universal button**: Confirms settings, makes selections, switches RDS modes.
 3. **EEPROM reset**: Important functionality that allows **resetting settings to defaults**. To do this, turn on the receiver with the encoder button already pressed. After that, the **EEPROM RESET** message should appear.
-4. **Quick step setting in SSB**: Only for SSB mode - pressing allows immediate entry into step adjustment mode.
+4. **Quick step adjustment**: Only for **SSB mode** - pressing allows immediate entry into step adjustment mode. Also works in **AM/FM** modes if option **Sca** is **Off** in settings.
 
 ### Settings
 Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder Button**, change value with **Encoder Rotation** and save it with **Encoder Button**. Close settings with **BAND-** button. Navigate between **settings pages** with **BAND+** button.
@@ -120,6 +121,12 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 **RDS** : **RDS Decoding error threshold** level. The lower this number, the better the RDS text appears, but the lower the chances for successful sync. The higher this value, the easier it is to decode the RDS stream, but it could look messed up frequently. This is number from **0** to **3**.
 
 **BFO** : **BFO Offset calibration**. One unit of this parameter is **1 Hz * 10** or **0.01 KHz**. This is permanent **BFO offset for SSB**. If you think SSB frequency is not precise enough you can calibrate it. Allowed offset value is from **-60 to 60 units** or from **-0.60 KHz to 0.60 KHz**.
+
+**Uni** : Show/Hide **frequency units**.
+
+**Sca** : On/Off **station scan feature** in AM or FM modes on **encoder button**. In disabled state **encoder button will always act as a Step button**.
+
+**CW** : **CW Side mode**. Based on **LSB** or **USB** modulation.
 
 ### Display elements description
 

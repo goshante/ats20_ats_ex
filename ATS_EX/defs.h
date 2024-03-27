@@ -4,8 +4,10 @@
 //and everything related to RDS will be excluded from build
 #define USE_RDS 1
 
-#define EEPROM_DATA_START_ADDRESS	0
+#define EEPROM_APP_ID				235
+#define EEPROM_DATA_START_ADDRESS	1
 #define EEPROM_VERSION_ADDRESS      1000
+#define EEPROM_APP_ID_ADDRESS       0
 
 //EEPROM Settings
 #define STORE_TIME 10000 // Inactive time to save our settings
@@ -43,7 +45,8 @@
 #define SW_LIMIT_LOW		1700
 #define SW_LIMIT_HIGH		30000
 #define LW_LIMIT_LOW		153
-#define LW_LIMIT_LOW_SSB	(LW_LIMIT_LOW - 16)
+#define CB_LIMIT_LOW		26200
+#define CB_LIMIT_HIGH		28000
 
 #define BAND_DELAY                 2
 #define VOLUME_DELAY               1 
