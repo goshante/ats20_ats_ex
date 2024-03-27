@@ -67,6 +67,9 @@ void doCPUSpeed(int8_t v = 0);
 void doRDSErrorLevel(int8_t v);
 #endif
 void doBFOCalibration(int8_t v);
+void doFreqUnits(int8_t v = 0);
+void doScanSwitch(int8_t v = 0);
+void doCWSwitch(int8_t v = 0);
 
 SettingsItem g_Settings[] =
 {
@@ -88,6 +91,9 @@ SettingsItem g_Settings[] =
 #endif
     //Page 3
     { "BFO", 0,  SettingType::Num,          doBFOCalibration  },  //BFO Offset calibration
+    { "Uni", 1,  SettingType::Switch,       doFreqUnits       },  //Show frequency units
+    { "Sca", 1,  SettingType::Switch,       doScanSwitch      },  //AM Encoder scan switch
+    { "CW ", 0,  SettingType::Switch,       doCWSwitch        },    //CW is LSB or USB
 };
 
 enum SettingsIndex
@@ -107,6 +113,9 @@ enum SettingsIndex
     RDSError,
 #endif
     BFO,
+    UnitsShow,
+    ScanSwitch,
+    CWSwitch,
     SETTINGS_MAX
 };
 
@@ -200,7 +209,6 @@ enum BandType : uint8_t
 
 struct Band
 {
-    BandType bandType;
     uint16_t minimumFreq;
     uint16_t maximumFreq;
     uint16_t currentFreq;
@@ -232,31 +240,35 @@ char* bandTags[] =
 
 Band g_bandList[] =
 {
-    { LW_BAND_TYPE, LW_LIMIT_LOW, 520, 300, 0, 4 },
-    { MW_BAND_TYPE, 520, 1710, 1476, 3, 4 },
-    { SW_BAND_TYPE, SW_LIMIT_LOW, 3500, 1900, 0, 4 },     // 160 Meter
-    { SW_BAND_TYPE, 3500, 4500, 3700, 0, 5 },     // 80 Meter
-    { SW_BAND_TYPE, 4500, 5600, 4850, 1, 4 },
-    { SW_BAND_TYPE, 5600, 6800, 6000, 1, 4 },
-    { SW_BAND_TYPE, 6800, 7300, 7100, 0, 4 },     // 40 Meter
-    { SW_BAND_TYPE, 7200, 8500, 7200, 1, 4 },     // 41 Meter
-    { SW_BAND_TYPE, 8500, 10000, 9604, 1, 4 },
-    { SW_BAND_TYPE, 10000, 11200, 10100, 0, 4 },  // 30 Meter
-    { SW_BAND_TYPE, 11200, 12500, 11940, 1, 4 },
-    { SW_BAND_TYPE, 13400, 13900, 13600, 1, 4 },
-    { SW_BAND_TYPE, 14000, 14500, 14200, 0, 4 },  // 20 Meter
-    { SW_BAND_TYPE, 15000, 15900, 15300, 1, 4 },
-    { SW_BAND_TYPE, 17200, 17900, 17600, 1, 4 },
-    { SW_BAND_TYPE, 18000, 18300, 18100, 0, 4 },  // 17 Meter
-    { SW_BAND_TYPE, 21000, 21400, 21200, 0, 4 },  // 15 Meter
-    { SW_BAND_TYPE, 21400, 21900, 21500, 1, 4 },  // 13 Meter
-    { SW_BAND_TYPE, 24890, 26200, 24940, 0, 4 },  // 12 Meter
-    { SW_BAND_TYPE, 26200, 28000, 27500, 0, 4 },  // CB Band (11 Meter)
-    { SW_BAND_TYPE, 28000, SW_LIMIT_HIGH, 28400, 0, 4 },  // 10 Meter
-    { FM_BAND_TYPE, 6400, 10800, 8400, 1, 0 },
-    //{ FM_BAND_TYPE, 8400, 10800, 10570, 1, 0 },
+    /* LW */ {LW_LIMIT_LOW, 520, 300, 0, 4},
+    /* MW */ { 520, 1710, 1476, 3, 4 },
+    /* SW */ { SW_LIMIT_LOW, SW_LIMIT_HIGH, SW_LIMIT_LOW, 0, 4 },
+    /* FM */ { 6400, 10800, 8400, 1, 0 },
 };
 
+uint16_t SWSubBands[] =
+{
+    SW_LIMIT_LOW,  // 160 Meter
+    3500, // 80 Meter
+    4500, 
+    5600,
+    6800, // 40 Meter
+    7200, // 41 Meter
+    8500, 
+    10000, // 30 Meter
+    11200,
+    13400, 
+    14000, // 20 Meter
+    15000,
+    17200, 
+    18000, // 17 Meter
+    21000, // 15 Meter
+    21400, // 13 Meter
+    24890, // 12 Meter
+    26200, // CB Band (11 Meter)
+    28000  // 10 Meter
+};
+const uint8_t g_SWSubBandCount = sizeof(SWSubBands) / sizeof(uint16_t);
 const uint8_t g_lastBand = (sizeof(g_bandList) / sizeof(Band)) - 1;
 int8_t g_bandIndex = 1;
 
