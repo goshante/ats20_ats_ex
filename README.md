@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.14 (27.03.2024)
+**Latest version:** v1.15 (29.03.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.14/ATS_EX_v1.14.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.15/ATS_EX_v1.15.hex)
 
 
 <p align="center">
@@ -22,7 +22,7 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - **BFO is now part of main frequency** and regulated by frequency step, it is no more dedicated option that makes frequency surfing experience terrible. SSB mode has more precise steps.
  - **LW** Band: From **153** KHz to **520** KHz 
  - **MW** Band: From **520** to **1710** KHz
- - **SW** Band: From **1700** to **30000** KHz (With a lot of sub-bands)
+ - **SW** Band: From **1710** to **30000** KHz (With a lot of sub-bands)
  - **FM** Band: From **64** to **108** MHz.
  - **Dynamic RDS** for **FM** radio stations with an option to switch RDS information lines (Displays UP to 16 characters).
  - AM/FM **Stations scan**.
