@@ -16,6 +16,7 @@ bool g_displayOn = true;
 bool g_displayRDS = false;
 bool g_rdsSwitchPressed = false;
 bool g_seekStop = false;
+uint32_t g_lastAdjustmentTime = 0;
 
 uint8_t g_muteVolume = 0;
 int g_currentBFO = 0;
@@ -241,7 +242,7 @@ char* bandTags[] =
 
 Band g_bandList[] =
 {
-    /* LW */ {LW_LIMIT_LOW, 520, 300, 0, 4},
+    /* LW */ { LW_LIMIT_LOW, 520, 300, 0, 4 },
     /* MW */ { 520, 1710, 1476, 3, 4 },
     /* SW */ { SW_LIMIT_LOW, SW_LIMIT_HIGH, SW_LIMIT_LOW, 0, 4 },
     /* FM */ { 6400, 10800, 8400, 1, 0 },
