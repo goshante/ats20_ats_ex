@@ -1500,6 +1500,8 @@ void loop()
                 g_si4735.setFrequency(g_currentFrequency);
                 g_currentFrequency = g_si4735.getFrequency();
                 g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
+                // FIX: change audio level when ATT != AUT
+                agcSetFunc();
             }
 
             g_lastFreqChange = millis();
