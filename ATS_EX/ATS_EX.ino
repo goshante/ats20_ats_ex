@@ -60,7 +60,7 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
-#define APP_VERSION 116
+#define APP_VERSION 117
 
 //Initialize controller
 void setup()
@@ -94,7 +94,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("ATS_EX v1.16", 16, 2);
+        oledPrint("ATS_EX v1.17", 16, 2);
         oledPrint("Goshante 2024", 12, 4);
         oledPrint("Best firmware", 12, 6);
         delay(2000);
@@ -957,6 +957,7 @@ void bandSwitch(bool up)
         if (isSSB())
             updateBFO();
         g_si4735.setFrequency(nextSW);
+        agcSetFunc(); //Re-apply to remove noize
         showFrequency();
         showBandTag();
     }
@@ -1550,6 +1551,7 @@ void doFrequencyTuneSSB()
     if (redundant != 0)
     {
         g_si4735.setFrequency(g_currentFrequency);
+        agcSetFunc(); //Re-apply to remove noize
         g_currentFrequency = g_si4735.getFrequency();
         g_bandList[g_bandIndex].currentFreq = g_currentFrequency;
     }

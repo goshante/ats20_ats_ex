@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.16 (01.04.2024)
+**Latest version:** v1.17 (01.04.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.16/ATS_EX_v1.16.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.17/ATS_EX_v1.17.hex)
 
 
 <p align="center">
@@ -55,6 +55,9 @@ You need to select from the **Presets** section either **"Arduino Nano (ATmega32
 
 Alternatively, you can compile the firmware yourself from the sources that are in this repository. I use Visual Studio 2022 with the VSMicro extension, which uses Arduino IDE 1.8. You can simply use Arduino IDE, compile the sketch yourself, and upload it to the controller directly from the IDE.
 
+## My receiver fails to flash, what should I do?
+This can happen if you're flashing through a USB port that's not capable of supplying sufficient current to power the controller along with the entire device. If you turn on the receiver before connecting it to the PC and connect it to a USB 3.0 port, your chances of success will be much higher. Yes, the receiver does not use USB 3.0, it has version 2.0, but the third version ports can supply more current. And if it still doesn't help, try to reflash the receiver through the Arduino IDE with a dummy firmware (empty programm), build an empty new project without any logic, and flash it into the receiver. After that, try to flash the actual firmware into it again.
+
 # User manual
 **ATTENTION:** After flashing it's strongly **recommended to reset EEPROM memory**. To do this just hold the **Encoder Button** while turning receiver on.
 
@@ -98,7 +101,7 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
     <img src="img/ats20_settings.png" alt="Icon" />
 </p>
 
-**ATT** : **Attenuation** value. **AUT** means **Auto Gain Congrol**. This value can be **AUT** and from **1** to **37**.
+**ATT** : **Attenuation** value. **AUT** means **Auto Gain Congrol**. This value can be **AUT** and from **1** to **37**. **Warning:** AGC mode (**AUT**) in any SSB modes will add some constant noize (It is present in ANY firmware). it's not highly noticeble, but still keep this in mind.
 
 **SM** : **Soft Mute**. This is number from **0** to **32**.
 
