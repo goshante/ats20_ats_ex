@@ -60,7 +60,7 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
-#define APP_VERSION 115
+#define APP_VERSION 116
 
 //Initialize controller
 void setup()
@@ -94,7 +94,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("ATS_EX v1.15", 16, 2);
+        oledPrint("ATS_EX v1.16", 16, 2);
         oledPrint("Goshante 2024", 12, 4);
         oledPrint("Best firmware", 12, 6);
         delay(2000);
@@ -441,6 +441,11 @@ bool checkStopSeeking()
 
 void doSeek()
 {
+    if (g_seekDirection)
+        g_si4735.frequencyUp();
+    else
+        g_si4735.frequencyDown();
+
 #if USE_RDS
     if (g_displayRDS)
         oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
@@ -1140,10 +1145,8 @@ void doStep(int8_t v)
             g_stepIndex = getLastStep();
 
         //SSB Step limit
-        else if (isSSB() && v == 1 && g_stepIndex >= g_amTotalStepsSSB && g_stepIndex < g_amTotalSteps)
-            g_stepIndex = g_amTotalSteps;
-        else if (isSSB() && v != 1 && g_stepIndex >= g_amTotalStepsSSB && g_stepIndex < g_amTotalSteps)
-            g_stepIndex = g_amTotalStepsSSB - 1;
+        else if (isSSB() && g_stepIndex >= g_amTotalStepsSSB && g_stepIndex < g_amTotalSteps)
+            g_stepIndex = v == 1 ? g_amTotalSteps : g_amTotalStepsSSB - 1;
         
         //LW/MW Step limit
         else if ((g_bandIndex == LW_BAND_TYPE || g_bandIndex == MW_BAND_TYPE)
