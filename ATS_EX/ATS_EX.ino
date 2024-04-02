@@ -1102,7 +1102,7 @@ void doStep(int8_t v)
 void updateBFO()
 {
     // Actually to move frequency forward you need to move BFO backwards, so just * -1
-    g_si4735.setSSBBfo((g_currentBFO + (g_Settings[SettingsIndex::BFO].param * 10)) * -1);
+    g_si4735.setSSBBfo((g_currentBFO + (g_Settings[SettingsIndex::BFO].param * 50)) * -1);
 }
 
 // Volume control
@@ -1261,7 +1261,7 @@ void doRDSErrorLevel(int8_t v)
 // Settings: BFO Offset calibration
 void doBFOCalibration(int8_t v)
 {
-    doSwitchLogic(g_Settings[SettingsIndex::BFO].param, -99, 100, v);
+    doSwitchLogic(g_Settings[SettingsIndex::BFO].param, -99, 99, v);
 
     if (isSSB())
     {
