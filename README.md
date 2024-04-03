@@ -6,9 +6,9 @@ This is advanced firmware for **ATS-20** that is working on **Arduino Nano** and
 ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by **swling.ru** firmware with closed source.
 
 
-**Latest version:** v1.17 (01.04.2024)
+**Latest version:** v1.18 (03.04.2024)
 
-**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.17/ATS_EX_v1.17.hex)
+**Download binary .hex link:** [>>> Click here <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.18/ATS_EX_v1.18.hex)
 
 
 <p align="center">
@@ -43,8 +43,10 @@ ATS_EX is created by **Goshante**, based on **PU2CLR** firmware and inspired by 
  - Fixed some bugs
 
  ## About new feature requests...
- Please, no not request new features. This firmware has hit the limit of maximum flash size and optimized as much as possible. It also has the bootloader and I am not going to remove it. 
+ Please, do not request new features. This firmware has hit the limit of maximum flash size and optimized as much as possible so it's impossible to add new features, there is not enough flash memory for new features. It's also has the bootloader and I am not going to remove it. 
  I only accept tickets about bugs and errors. This firmware works on the verge of ATS-20 capabilities.
+
+ If you want to add something new you can try it yourself. All source code is available and present in this repository.
 
  # How to flash it on my receiver?
 You can use any software capable of flashing a .hex firmware file to Arduino. You will only need a Micro USB cable and a **USB UART driver** (most likely, it will be the driver for the **CH341** controller). I recommend using **AVRDUDESS** if you are on Windows. It's a simple tool with a GUI that can dump and flash firmware files onto Atmel microcontrollers (Arduino). 
@@ -56,7 +58,7 @@ You need to select from the **Presets** section either **"Arduino Nano (ATmega32
 Alternatively, you can compile the firmware yourself from the sources that are in this repository. I use Visual Studio 2022 with the VSMicro extension, which uses Arduino IDE 1.8. You can simply use Arduino IDE, compile the sketch yourself, and upload it to the controller directly from the IDE.
 
 ## My receiver fails to flash, what should I do?
-This can happen if you're flashing through a USB port that's not capable of supplying sufficient current to power the controller along with the entire device. If you turn on the receiver before connecting it to the PC and connect it to a USB 3.0 port, your chances of success will be much higher. Yes, the receiver does not use USB 3.0, it has version 2.0, but the third version ports can supply more current. And if it still doesn't help, try to reflash the receiver through the Arduino IDE with a dummy firmware (empty programm), build an empty new project without any logic, and flash it into the receiver. After that, try to flash the actual firmware into it again.
+This can happen if you're flashing through a USB port that's not capable of supplying sufficient current to power the controller along with the entire device. If you turn on the receiver before connecting it to the PC and connect it to a **USB 3.0 port**, your chances of success will be much higher. Yes, the receiver does not use USB 3.0, it has version 2.0, but the third version ports can supply **more current**. And if it still doesn't help, try to reflash the receiver through the Arduino IDE with a **dummy firmware** (empty programm), build an empty new project without any logic, and flash it into the receiver. If you flashing Arduino Nano version make sure you selected **"Old Bootloader"** board version. After that, try to flash the actual firmware into it again.
 
 # User manual
 **ATTENTION:** After flashing it's strongly **recommended to reset EEPROM memory**. To do this just hold the **Encoder Button** while turning receiver on.
@@ -112,6 +114,8 @@ Navigate in settings with **Encoder Rotation**, confirm selection with **Encoder
 **DeE** :  Only for **FM** mode. It's **DeEmphasis** value in microseconds. It can be only **50** or **75**.
 
 **Syn** : Enable or disable **Sync mode for SSB**.
+
+**Scr** : **Screen brightness** adjustment. This is number from **5** to **125**.
 
 **SW** : **Frequency units** for AM mode in SW band. It can be only **KHz** or **MHz**. In MHz mode it used dot as delimiter.
 

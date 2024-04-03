@@ -69,7 +69,7 @@ void doCPUSpeed(int8_t v = 0);
 void doRDSErrorLevel(int8_t v);
 #endif
 void doBFOCalibration(int8_t v);
-void doFreqUnits(int8_t v = 0);
+void doUnitsSwitch(int8_t v = 0);
 void doScanSwitch(int8_t v = 0);
 void doCWSwitch(int8_t v = 0);
 
@@ -93,9 +93,9 @@ SettingsItem g_Settings[] =
 #endif
     //Page 3
     { "BFO", 0,  SettingType::Num,          doBFOCalibration  },  //BFO Offset calibration
-    { "Uni", 1,  SettingType::Switch,       doFreqUnits       },  //Show frequency units
+    { "Uni", 1,  SettingType::Switch,       doUnitsSwitch     },  //Show/Hide frequency units
     { "Sca", 1,  SettingType::Switch,       doScanSwitch      },  //AM Encoder scan switch
-    { "CW ", 0,  SettingType::Switch,       doCWSwitch        },    //CW is LSB or USB
+    { "CW ", 0,  SettingType::Switch,       doCWSwitch        },  //CW is LSB or USB
 };
 
 enum SettingsIndex
@@ -115,7 +115,7 @@ enum SettingsIndex
     RDSError,
 #endif
     BFO,
-    UnitsShow,
+    UnitsSwitch,
     ScanSwitch,
     CWSwitch,
     SETTINGS_MAX
@@ -159,13 +159,13 @@ Bandwidth g_bandwidthAM[] =
 };
 
 int8_t g_bwIndexFM = 0;
-Bandwidth g_bandwidthFM[] =
+char* g_bandwidthFM[] =
 {
-    { 0, "AUTO" },
-    { 1, "110k" },
-    { 2, " 84k" },
-    { 3, " 60k" },
-    { 4, " 40k" }
+    "AUTO",
+    "110k",
+    " 84k",
+    " 60k",
+    " 40k"
 };
 
 int g_tabStep[] =

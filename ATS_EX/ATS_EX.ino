@@ -60,7 +60,7 @@ int getLastStep()
 // ------- Main logic -------
 // --------------------------
 
-#define APP_VERSION 117
+#define APP_VERSION 118
 
 //Initialize controller
 void setup()
@@ -94,7 +94,7 @@ void setup()
     else
     {
         oledPrint(" ATS-20 RECEIVER", 0, 0, DEFAULT_FONT, true);
-        oledPrint("ATS_EX v1.17", 16, 2);
+        oledPrint("ATS_EX v1.18", 16, 2);
         oledPrint("Goshante 2024", 12, 4);
         oledPrint("Best firmware", 12, 6);
         delay(2000);
@@ -283,16 +283,14 @@ void readAllReceiverInformation()
     g_volume = EEPROM.read(addr++);
     g_bandIndex = EEPROM.read(addr++);
     g_currentMode = EEPROM.read(addr++);
-    g_currentBFO = EEPROM.read(addr++) << 8;
-    g_currentBFO |= EEPROM.read(addr++);
+    g_currentBFO = (EEPROM.read(addr++) << 8) | EEPROM.read(addr++);
     g_FMStepIndex = EEPROM.read(addr++);
     g_prevMode = EEPROM.read(addr++);
     g_bwIndexSSB = EEPROM.read(addr++);
 
     for (uint8_t i = 0; i <= g_lastBand; i++)
     {
-        g_bandList[i].currentFreq = EEPROM.read(addr++) << 8;
-        g_bandList[i].currentFreq |= EEPROM.read(addr++);
+        g_bandList[i].currentFreq = (EEPROM.read(addr++) << 8) | EEPROM.read(addr++);
         g_bandList[i].currentStepIdx = EEPROM.read(addr++);
         g_bandList[i].bandwidthIdx = EEPROM.read(addr++);
     }
@@ -325,7 +323,7 @@ void readAllReceiverInformation()
     else
     {
         g_bwIndexFM = bwIdx;
-        g_si4735.setFmBandwidth(g_bandwidthFM[g_bwIndexFM].idx);
+        g_si4735.setFmBandwidth(g_bwIndexFM);
     }
 
     applyBandConfiguration();
@@ -409,7 +407,7 @@ void showFrequency(bool cleanDisplay = false)
             oledPrint("/");
     }
 
-    if (g_Settings[SettingsIndex::UnitsShow].param == 1 && (!isSSB() || isSSB() && len < 5))
+    if (g_Settings[SettingsIndex::UnitsSwitch].param == 1 && (!isSSB() || isSSB() && len < 5))
         oledPrint(unit, 102, 4, DEFAULT_FONT);
         
     prevLen = len;
@@ -719,37 +717,64 @@ void showCharge(bool forceShow)
     if (!g_voltagePinConnnected)
         return;
 
+    // mV, Percent
     //This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
     //Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
-   
-    const uint16_t chargeFull = 651;    //2.10v of battery with 3.30v reference
-    const uint16_t chargeLow = 558;     //1.80v of battery with 3.30v reference
+    constexpr const uint8_t rows = 10;
+    const uint16_t dischargeTable[rows][2] =
+    {
+        { 643, 100 },  //4.15v
+        { 620, 95  },  //4.05v
+        { 604, 90  },  //3.90v
+        { 581, 80  },  //3.75v
+        { 573, 60  },  //3.70v
+        { 558, 40  },  //3.60v
+        { 542, 20  },  //3.50v
+        { 503, 15  },  //3.25v
+        { 496, 5  },   //3.20v
+        { 488, 0  },   //3.15v
+    };
+
+    auto getBatteryPercentage = [&](uint16_t currentSamples) -> uint8_t
+    {
+        if (currentSamples >= dischargeTable[0][0]) 
+            return 100;
+
+        if (currentSamples <= dischargeTable[rows - 1][0]) 
+            return 0;
+
+        for (uint8_t i = 0; i < rows - 1; ++i) 
+        {
+            if (currentSamples >= dischargeTable[i + 1][0] && currentSamples <= dischargeTable[i][0]) 
+            {
+                uint16_t voltageDiff = dischargeTable[i][0] - dischargeTable[i + 1][0];
+                uint16_t percentageDiff = dischargeTable[i][1] - dischargeTable[i + 1][1];
+                uint16_t voltageOffset = currentSamples - dischargeTable[i + 1][0];
+                return dischargeTable[i + 1][1] + (percentageDiff * voltageOffset + voltageDiff / 2) / voltageDiff;
+            }
+        }
+
+        return 0;
+    };
+
     static uint32_t lastChargeShow = 0;
     static int16_t averageSamples = 0;
 
     int sample = analogRead(BATTERY_VOLTAGE_PIN);
     if (sample < 0)
         sample = averageSamples;
-    sample = (sample > chargeFull) ? chargeFull : sample;
 
     if ((millis() - lastChargeShow) > 10000 || forceShow)
     {
         char buf[4];
         buf[3] = 0;
-        int16_t percents = (((averageSamples - chargeLow) * 100) / (chargeFull - chargeLow));
+        int16_t percents = getBatteryPercentage(averageSamples);
 
         uint8_t il = ilen(percents) < 3 ? 2 : 3;
         convertToChar(buf, percents, il);
 
         if (il < 3)
             buf[2] = '%';
-
-        if (averageSamples < (chargeLow - 20))
-        {
-            buf[0] = '-';
-            buf[1] = '-';
-            buf[2] = '-';
-        }
 
         if (!g_settingsActive && !g_sMeterOn && !g_displayRDS)
             oledPrint(buf, 102, 6, DEFAULT_FONT);
@@ -796,7 +821,6 @@ void showRDS()
         oledPrint(_literal_EmptyLine, 0, 6, DEFAULT_FONT);
     }
     lastUpdatedFreq = g_currentFrequency;
-
 
     if (!succeed)
         g_si4735.getRdsStatus();
@@ -893,12 +917,7 @@ void showSMeter()
     int sMeterValue = rssi / (64 / 16);
     char buf[17];
     for (uint8_t i = 0; i < sizeof(buf) - 1; i++)
-    {
-        if (i < sMeterValue)
-            buf[i] = '|';
-        else
-            buf[i] = ' ';
-    }
+        buf[i] = i < sMeterValue ? '|' : ' ';
     buf[sizeof(buf) - 1] = 0x0;
 
     oledPrint(buf, 0, 6, DEFAULT_FONT);
@@ -921,7 +940,7 @@ void showBandwidth()
     }
     else
     {
-        bw = (char*)g_bandwidthFM[g_bwIndexFM].desc;
+        bw = (char*)g_bandwidthFM[g_bwIndexFM];
     }
 
     oledPrint(bw, 45, 0, DEFAULT_FONT, g_cmdBw);
@@ -1032,10 +1051,10 @@ void setRDSConfig(uint8_t bias)
 //Update receiver settings after changing band and modulation
 void applyBandConfiguration(bool extraSSBReset = false)
 {
+    g_si4735.setTuneFrequencyAntennaCapacitor(uint16_t(g_bandIndex == SW_BAND_TYPE));
     if (g_bandIndex == FM_BAND_TYPE)
     {
         g_currentMode = FM;
-        g_si4735.setTuneFrequencyAntennaCapacitor(0);
         g_si4735.setFM(g_bandList[g_bandIndex].minimumFreq,
             g_bandList[g_bandIndex].maximumFreq,
             g_bandList[g_bandIndex].currentFreq,
@@ -1048,16 +1067,11 @@ void applyBandConfiguration(bool extraSSBReset = false)
 #endif
         g_si4735.setFifoCount(1);
         g_bwIndexFM = g_bandList[g_bandIndex].bandwidthIdx;
-        g_si4735.setFmBandwidth(g_bandwidthFM[g_bwIndexFM].idx);
+        g_si4735.setFmBandwidth(g_bwIndexFM);
         g_si4735.setFMDeEmphasis(g_Settings[SettingsIndex::DeEmp].param == 0 ? 1 : 2);
     }
     else
     {
-        if (g_bandIndex == MW_BAND_TYPE || g_bandIndex == LW_BAND_TYPE)
-            g_si4735.setTuneFrequencyAntennaCapacitor(0);
-        else
-            g_si4735.setTuneFrequencyAntennaCapacitor(1);
-
         uint16_t minFreq = g_bandList[g_bandIndex].minimumFreq;
         uint16_t maxFreq = g_bandList[g_bandIndex].maximumFreq;
         if (g_bandIndex == SW_BAND_TYPE)
@@ -1253,7 +1267,7 @@ void doSSBAVC(int8_t v = 0)
 //Settings: Automatic Volume Control
 void doAvc(int8_t v)
 {
-    doSwitchLogic(g_Settings[SettingsIndex::AutoVolControl].param, 12, 90, 2 * v);
+    doSwitchLogic(g_Settings[SettingsIndex::AutoVolControl].param, 12, 90, v);
 
     if (g_currentMode != FM)
         g_si4735.setAvcAmMaxGain(g_Settings[SettingsIndex::AutoVolControl].param);
@@ -1316,16 +1330,6 @@ void doCPUSpeed(int8_t v = 0)
     interrupts();
 }
 
-#if USE_RDS
-//Settings: RDS Error Level
-void doRDSErrorLevel(int8_t v)
-{
-    doSwitchLogic(g_Settings[SettingsIndex::RDSError].param, 0, 3, v);
-
-    if (g_currentMode == FM)
-        setRDSConfig(g_Settings[SettingsIndex::RDSError].param);
-}
-
 //Settings: BFO Offset calibration
 void doBFOCalibration(int8_t v)
 {
@@ -1333,15 +1337,17 @@ void doBFOCalibration(int8_t v)
 
     if (isSSB())
     {
+#if USE_RDS
         setRDSConfig(g_Settings[SettingsIndex::BFO].param);
+#endif
         updateBFO();
     }
 }
 
-//Settings: Frequency inits displayu switch
-void doFreqUnits(int8_t v = 0)
+//Settings: Tune Frequency Antenna Capacitor
+void doUnitsSwitch(int8_t v)
 {
-    doSwitchLogic(g_Settings[SettingsIndex::UnitsShow].param, 0, 1, v);
+    doSwitchLogic(g_Settings[SettingsIndex::UnitsSwitch].param, 0, 1, v);
 }
 
 //Settings: Scan button switch
@@ -1358,6 +1364,17 @@ void doCWSwitch(int8_t v = 0)
     if (g_currentMode == CW)
         applyBandConfiguration(true);
 }
+
+#if USE_RDS
+//Settings: RDS Error Level
+void doRDSErrorLevel(int8_t v)
+{
+    doSwitchLogic(g_Settings[SettingsIndex::RDSError].param, 0, 3, v);
+
+    if (g_currentMode == FM)
+        setRDSConfig(g_Settings[SettingsIndex::RDSError].param);
+}
+
 
 void doRDS()
 {
@@ -1401,7 +1418,7 @@ void doBandwidth(uint8_t v)
     {
         doBandwidthLogic(g_bwIndexFM, 4, v);
         g_bandList[g_bandIndex].bandwidthIdx = g_bwIndexFM;
-        g_si4735.setFmBandwidth(g_bandwidthFM[g_bwIndexFM].idx);
+        g_si4735.setFmBandwidth(g_bwIndexFM);
     }
     showBandwidth();
 }
@@ -1485,16 +1502,7 @@ bool clampSSBBand()
 
 void doFrequencyTune()
 {
-    if (g_encoderCount == 1)
-    {
-        //g_si4735.frequencyUp();
-        g_seekDirection = 1;
-    }
-    else
-    {
-        //g_si4735.frequencyDown();
-        g_seekDirection = 0;
-    }
+    g_seekDirection = g_encoderCount == 1 ? 1 : 0;
 
     //Update frequency
     g_previousFrequency = g_currentFrequency; //Force EEPROM update
@@ -1521,6 +1529,16 @@ void doFrequencyTune()
     g_lastFreqChange = millis();
 
     showFrequency();
+}
+
+void resetLowerLine()
+{
+    if (g_sMeterOn || g_displayRDS)
+    {
+        g_sMeterOn = false;
+        g_displayRDS = false;
+        updateLowerDisplayLine();
+    }
 }
 
 //Special feature to make SSB feel like on expensive TECSUN receivers
@@ -1677,12 +1695,7 @@ void loop()
     {
         if (!g_settingsActive)
         {
-            if (g_sMeterOn || g_displayRDS)
-            {
-                g_sMeterOn = false;
-                g_displayRDS = false;
-                updateLowerDisplayLine();
-            }
+            resetLowerLine();
             switchCommand(&g_cmdBand, showModulation);
         }
         else
@@ -1754,12 +1767,7 @@ void loop()
             if (!g_settingsActive)
             {
                 switchCommand(&g_cmdStep, showStep);
-                if (g_sMeterOn || g_displayRDS)
-                {
-                    g_displayRDS = false;
-                    g_sMeterOn = false;
-                    updateLowerDisplayLine();
-                }
+                resetLowerLine();
             }
         }
         //Seek in SSB/CW is not allowed
@@ -1797,12 +1805,7 @@ void loop()
         if (!g_settingsActive)
         {
             switchCommand(&g_cmdStep, showStep);
-            if (g_sMeterOn || g_displayRDS)
-            {
-                g_sMeterOn = false;
-                g_displayRDS = false;
-                updateLowerDisplayLine();
-            }
+            resetLowerLine();
         }
     }
     if (BUTTONEVENT_LONGPRESSDONE == stepEvent)
