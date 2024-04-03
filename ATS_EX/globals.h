@@ -159,13 +159,13 @@ Bandwidth g_bandwidthAM[] =
 };
 
 int8_t g_bwIndexFM = 0;
-Bandwidth g_bandwidthFM[] =
+char* g_bandwidthFM[] =
 {
-    { 0, "AUTO" },
-    { 1, "110k" },
-    { 2, " 84k" },
-    { 3, " 60k" },
-    { 4, " 40k" }
+    "AUTO",
+    "110k",
+    " 84k",
+    " 60k",
+    " 40k"
 };
 
 int g_tabStep[] =
