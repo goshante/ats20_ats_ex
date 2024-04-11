@@ -71,7 +71,9 @@ void setup()
     PORTD |= (1 << ENCODER_PIN_A);
     DDRD &= ~(1 << ENCODER_PIN_B);
     PORTD |= (1 << ENCODER_PIN_B);
-    g_voltagePinConnnected = analogRead(BATTERY_VOLTAGE_PIN) > 300;
+
+    analogReference(INTERNAL);
+    g_voltagePinConnnected = analogRead(BATTERY_VOLTAGE_PIN) > 500;
 
     oled.begin(128, 64, sizeof(tiny4koled_init_128x64br), tiny4koled_init_128x64br);
     oled.clear();
@@ -675,19 +677,39 @@ void showVolume()
 
 // Draw battery charge
 // This feature requires hardware mod
-// Voltage divider made of two 10 KOhm resistors between + and GND of Li-Ion battery
-// Solder it to A2 analog pin
 void showCharge(bool forceShow)
 {
     if (!g_voltagePinConnnected)
         return;
+    /*
+    Using internal voltage reference from 1.1 V to prevent variation from AREF
+    analogReference(INTERNAL);
 
-    // This values represent voltage values in ATMega328p analog units with reference voltage 3.30v
-    // Voltage pin reads voltage from voltage divider, so it have to be 1/2 of Li-Ion battery voltage
-    //  const uint16_t chargeFull = 651;    //2.1v
-    //  const uint16_t chargeLow = 558;     //1.8v
-    const uint16_t chargeFull = 633; // 2v
-    const uint16_t chargeLow = 550;  // 1.6v
+    K = 1.1 / 1024
+    Vo = AD * K
+    AD = Vo / K
+    Vo = Vi * (R2 / (R1 + R2))
+
+    Vi -> Connected after power switch to read battery voltage
+
+    Vi --
+        |
+        R1
+        |
+        ---- Vo
+        |
+        R2
+        |
+        GND
+    R1 = 10K 
+    R2 = 2K7
+    K = 0.001
+    Vo = Vi * 0.213
+    Vi = 3.2 V -> Vo = 0.682 -> AD = 682
+    Vi = 4.0 V -> Vo = 0.852 -> AD = 852
+    */
+    const uint16_t chargeFull = 852; // 4v
+    const uint16_t chargeLow = 682;  // 3.2v
     static uint32_t lastChargeShow = 0;
     static int16_t averageSamples = 0;
 
