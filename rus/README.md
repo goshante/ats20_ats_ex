@@ -8,7 +8,7 @@
 
 **Ссылка на скачивание готового .hex файла прошивки:** [>>> Нажмите здесь <<<](https://github.com/goshante/ats20_ats_ex/releases/download/v1.18/ATS_EX_v1.18.hex)
 
-
+Задонатить автору можно здесь :) https://t.me/tribute/app?startapp=d7vv
 <p align="center">
     <img src="../img/ats20.png" alt="Icon" />
 </p>
