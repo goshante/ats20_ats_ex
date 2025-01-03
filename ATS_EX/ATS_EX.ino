@@ -573,15 +573,15 @@ void SettingParamToUI(char* buf, uint8_t idx)
         {
             if (param == 0)
             {
-                buf[0] = '1';
-                buf[1] = '0';
-                buf[2] = '0';
+                buf[0] = 'F';
+                buf[1] = 'S';
+                buf[2] = 'P';
             }
             else
             {
-                buf[0] = '5';
-                buf[1] = '0';
-                buf[2] = '%';
+                buf[0] = 'H';
+                buf[1] = 'S';
+                buf[2] = 'P';
             }
         }
         else
